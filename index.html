@@ -1,0 +1,1910 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <title>PulseMetrics — B2B SaaS Revenue & Churn Intelligence (Demo Workspace)</title>
+  
+  <!-- SEO & Social Open Graph Tags -->
+  <meta name="description" content="PulseMetrics is an enterprise-grade subscription analytics platform designed for US & UK B2B SaaS companies. Real-time MRR, ARR, cohort retention, and churn prediction.">
+  <meta property="og:title" content="PulseMetrics — Enterprise SaaS Revenue Intelligence">
+  <meta property="og:description" content="Real-time MRR, churn prediction, cohort retention, and automated Stripe billing analytics for US & UK tech companies.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80">
+  
+  <!-- Inline SVG Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23060a16'/><path d='M6 18h4l3-8 5 16 4-10h4' fill='none' stroke='%2306b6d4' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- External Scripts -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- Centralized Mock Data Layer -->
+  <script src="./data/mockData.js"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            fintech: {
+              950: '#060a16',
+              900: '#0b1124',
+              850: '#101935',
+              800: '#172347',
+              700: '#203163',
+            },
+            accent: {
+              emerald: '#10b981',
+              cyan: '#06b6d4',
+              violet: '#8b5cf6',
+              amber: '#f59e0b',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Dark Theme Default */
+    body.theme-dark {
+      background-color: #060a16;
+      background-image: 
+        radial-gradient(circle at 15% 10%, rgba(6, 182, 212, 0.12) 0%, transparent 45%),
+        radial-gradient(circle at 85% 15%, rgba(139, 92, 246, 0.10) 0%, transparent 45%),
+        radial-gradient(circle at 50% 80%, rgba(16, 185, 129, 0.08) 0%, transparent 55%);
+      background-attachment: fixed;
+      color: #f1f5f9;
+    }
+    body.theme-dark .fintech-card {
+      background: rgba(16, 25, 53, 0.80);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    body.theme-dark .fintech-sidebar {
+      background: rgba(11, 17, 36, 0.95);
+      border-right: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    /* Light Luxe Theme */
+    body.theme-light {
+      background-color: #f8fafc;
+      background-image: 
+        radial-gradient(circle at 15% 10%, rgba(6, 182, 212, 0.06) 0%, transparent 45%),
+        radial-gradient(circle at 85% 15%, rgba(139, 92, 246, 0.05) 0%, transparent 45%),
+        radial-gradient(circle at 50% 80%, rgba(16, 185, 129, 0.05) 0%, transparent 55%);
+      background-attachment: fixed;
+      color: #0f172a;
+    }
+    body.theme-light .fintech-card {
+      background: rgba(255, 255, 255, 0.90);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(226, 232, 240, 0.9);
+      box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+    }
+    body.theme-light .fintech-card:hover {
+      border-color: rgba(6, 182, 212, 0.5);
+      box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.1);
+    }
+    body.theme-light .fintech-sidebar {
+      background: rgba(255, 255, 255, 0.98);
+      border-right: 1px solid rgba(226, 232, 240, 0.9);
+    }
+    body.theme-light .text-white {
+      color: #0f172a !important;
+    }
+    body.theme-light .text-slate-300, body.theme-light .text-slate-200 {
+      color: #334155 !important;
+    }
+    body.theme-light .bg-fintech-950, body.theme-light .bg-fintech-900, body.theme-light .bg-fintech-850 {
+      background-color: #f1f5f9 !important;
+    }
+
+    /* Tour Spotlight Overlay */
+    .tour-spotlight {
+      position: relative;
+      z-index: 60 !important;
+      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.75), 0 0 25px 5px rgba(6, 182, 212, 0.6) !important;
+      transition: all 0.3s ease;
+    }
+
+    /* Scrollbars */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #203163; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #06b6d4; }
+  </style>
+</head>
+<body class="theme-dark font-sans selection:bg-cyan-500 selection:text-black antialiased min-h-screen flex flex-col md:flex-row overflow-x-hidden">
+
+  <!-- DEMO MODE TOP BANNER -->
+  <div id="demoNoticeBanner" class="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-cyan-600 via-sky-600 to-emerald-600 text-slate-950 px-4 py-1.5 text-xs font-mono font-bold flex items-center justify-between shadow-md">
+    <div class="flex items-center gap-2 truncate">
+      <span class="px-2 py-0.5 rounded-full bg-slate-950 text-cyan-300 text-[10px] tracking-wide uppercase">Interactive Demo</span>
+      <span class="truncate">PulseMetrics Live Preview • All metrics & controls fully responsive</span>
+    </div>
+    <div class="flex items-center gap-3 shrink-0">
+      <button onclick="startGuidedTour()" class="hover:underline flex items-center gap-1">
+        <i data-lucide="compass" class="w-3.5 h-3.5"></i> Guided Tour
+      </button>
+      <button onclick="toggleCommandPalette()" class="hover:underline hidden sm:flex items-center gap-1">
+        <kbd class="px-1.5 py-0.2 rounded bg-black/20 text-[10px]">⌘K</kbd> Actions
+      </button>
+      <button onclick="dismissBanner()" class="p-0.5 hover:bg-black/10 rounded">
+        <i data-lucide="x" class="w-3.5 h-3.5"></i>
+      </button>
+    </div>
+  </div>
+
+  <div class="h-8 w-full md:hidden"></div>
+
+  <!-- MOBILE TOP BAR -->
+  <header class="md:hidden flex items-center justify-between p-4 bg-fintech-900 border-b border-white/10 sticky top-8 z-40">
+    <div class="flex items-center gap-2.5">
+      <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-cyan-500 to-emerald-400 p-[1.5px] flex items-center justify-center">
+        <div class="w-full h-full bg-fintech-950 rounded-[10px] flex items-center justify-center font-mono font-bold text-cyan-400 text-xs">PM</div>
+      </div>
+      <div>
+        <span class="font-extrabold text-white text-sm tracking-tight block">PulseMetrics</span>
+        <span class="text-[10px] font-mono text-cyan-400 block -mt-0.5">Demo Workspace</span>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <button onclick="toggleTheme()" class="p-2 rounded-lg bg-fintech-800 text-slate-300 border border-white/10">
+        <i data-lucide="sun-moon" class="w-4 h-4"></i>
+      </button>
+      <button onclick="toggleMobileMenu()" class="p-2 rounded-lg bg-fintech-800 text-slate-300 border border-white/10">
+        <i data-lucide="menu" class="w-5 h-5"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- MOBILE BACKDROP OVERLAY -->
+  <div id="sidebarBackdrop" onclick="toggleMobileMenu()" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden md:hidden"></div>
+
+  <!-- SIDEBAR (ENTERPRISE FINTECH NAVIGATION) -->
+  <aside id="sidebar" class="fintech-sidebar w-72 max-w-[85vw] md:w-64 lg:w-72 shrink-0 h-screen fixed inset-y-0 left-0 md:sticky md:top-0 flex flex-col justify-between p-5 z-50 md:z-40 hidden md:flex border-r border-white/10 overflow-y-auto pt-6 md:pt-10 shadow-2xl md:shadow-none">
+    
+    <div>
+      <!-- Brand Header -->
+      <div class="flex items-center justify-between pb-5 border-b border-white/10 mb-5">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-500 via-sky-400 to-emerald-400 p-[1.5px] flex items-center justify-center shadow-lg shadow-cyan-500/20">
+            <div class="w-full h-full bg-fintech-950 rounded-[10px] flex items-center justify-center font-mono font-bold text-cyan-400 text-sm">PM</div>
+          </div>
+          <div>
+            <span class="font-extrabold text-white text-base tracking-tight block">PulseMetrics</span>
+            <span class="text-[11px] font-mono text-slate-400 block -mt-0.5">SaaS Analytics ERP</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-mono font-bold flex items-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Demo
+          </span>
+          <button onclick="toggleMobileMenu()" class="md:hidden p-1.5 rounded-lg bg-fintech-800 text-slate-400 hover:text-white" aria-label="Close sidebar">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Switch Workspace (US / UK Multi-Tenant) -->
+      <div class="relative mb-5">
+        <div class="p-3 rounded-2xl bg-fintech-950/80 border border-white/10 font-mono text-xs cursor-pointer hover:border-cyan-500/40 transition" onclick="toggleTenantDropdown()">
+          <div class="flex items-center justify-between text-slate-400 mb-1 text-[10px]">
+            <span class="tracking-wider">TENANT WORKSPACE</span>
+            <span class="text-emerald-400 flex items-center gap-1 font-bold">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> <span id="tenantStatus">LIVE</span>
+            </span>
+          </div>
+          <div class="flex items-center justify-between text-white font-bold">
+            <span class="flex items-center gap-1.5 truncate" id="currentTenantLabel">
+              <i data-lucide="building-2" class="w-3.5 h-3.5 text-cyan-400 shrink-0"></i> 
+              <span>Acme Global (US & UK)</span>
+            </span>
+            <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-200" id="tenantCaret"></i>
+          </div>
+        </div>
+
+        <!-- Tenant Switcher Dropdown Menu -->
+        <div id="tenantDropdown" class="absolute left-0 right-0 top-full mt-2 bg-fintech-900 border border-white/10 rounded-2xl shadow-2xl p-2 z-50 hidden backdrop-blur-xl space-y-1 font-mono text-xs">
+          <button onclick="switchTenant('global')" class="w-full text-left p-2.5 rounded-xl hover:bg-white/5 flex items-center justify-between text-slate-200 hover:text-white transition">
+            <div class="flex items-center gap-2">
+              <span class="w-6 h-6 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-[10px] font-bold text-cyan-400">GLB</span>
+              <div>
+                <div class="font-bold">Acme Global Holdings</div>
+                <div class="text-[10px] text-slate-400">Consolidated US & UK</div>
+              </div>
+            </div>
+            <span class="text-[10px] px-1.5 py-0.5 rounded bg-cyan-500/10 text-cyan-300 border border-cyan-500/20">All</span>
+          </button>
+          <button onclick="switchTenant('us')" class="w-full text-left p-2.5 rounded-xl hover:bg-white/5 flex items-center justify-between text-slate-200 hover:text-white transition">
+            <div class="flex items-center gap-2">
+              <span class="w-6 h-6 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-[10px] font-bold text-emerald-400">US</span>
+              <div>
+                <div class="font-bold">Acme Cloud US LLC</div>
+                <div class="text-[10px] text-slate-400">Delaware / SF • USD ($)</div>
+              </div>
+            </div>
+            <span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">ACH</span>
+          </button>
+          <button onclick="switchTenant('uk')" class="w-full text-left p-2.5 rounded-xl hover:bg-white/5 flex items-center justify-between text-slate-200 hover:text-white transition">
+            <div class="flex items-center gap-2">
+              <span class="w-6 h-6 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-[10px] font-bold text-violet-400">UK</span>
+              <div>
+                <div class="font-bold">Acme FinTech UK Ltd</div>
+                <div class="text-[10px] text-slate-400">London EC2 • GBP (£)</div>
+              </div>
+            </div>
+            <span class="text-[10px] px-1.5 py-0.5 rounded bg-violet-500/10 text-violet-300 border border-violet-500/20">BACS</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Navigation Menu -->
+      <nav class="space-y-1 font-mono text-xs">
+        <div class="text-[10px] uppercase text-slate-500 tracking-wider font-bold px-3 py-1 mb-1">Analytics Views</div>
+        <a href="#overview" onclick="highlightNav(this)" class="nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 font-bold transition">
+          <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+          <span>Executive Overview</span>
+        </a>
+        <a href="#chart-section" onclick="highlightNav(this)" class="nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-300 hover:bg-white/5 hover:text-white transition">
+          <i data-lucide="trending-up" class="w-4 h-4 text-slate-400"></i>
+          <span>Revenue Trajectory</span>
+        </a>
+        <a href="#aiCopilotSection" onclick="highlightNav(this)" class="nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-300 hover:bg-white/5 hover:text-white transition">
+          <i data-lucide="sparkles" class="w-4 h-4 text-cyan-400"></i>
+          <span>AI Revenue Copilot</span>
+        </a>
+        <a href="#webhook-section" onclick="highlightNav(this)" class="nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-300 hover:bg-white/5 hover:text-white transition">
+          <i data-lucide="zap" class="w-4 h-4 text-slate-400"></i>
+          <span>Live Webhook Feed</span>
+        </a>
+        <a href="#cohort-section" onclick="highlightNav(this)" class="nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-300 hover:bg-white/5 hover:text-white transition">
+          <i data-lucide="layers" class="w-4 h-4 text-slate-400"></i>
+          <span>Cohort Retention</span>
+        </a>
+        <a href="#subscribers-section" onclick="highlightNav(this)" class="nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-300 hover:bg-white/5 hover:text-white transition">
+          <i data-lucide="users" class="w-4 h-4 text-slate-400"></i>
+          <span>Subscribers & Churn</span>
+        </a>
+
+        <div class="text-[10px] uppercase text-slate-500 tracking-wider font-bold px-3 py-1 mt-5 mb-1">Integrations & Tools</div>
+        <div class="px-3 py-2 space-y-2 text-[11px] text-slate-400">
+          <button onclick="openOAuthConnectModal('Stripe')" class="w-full flex items-center justify-between hover:text-white transition group text-left">
+            <span class="flex items-center gap-2"><i data-lucide="check" class="w-3 h-3 text-emerald-400"></i> Stripe Billing API</span>
+            <span class="text-emerald-400 text-[10px] group-hover:underline">Synced -></span>
+          </button>
+          <button onclick="openOAuthConnectModal('Google Analytics')" class="w-full flex items-center justify-between hover:text-white transition group text-left">
+            <span class="flex items-center gap-2"><i data-lucide="plus-circle" class="w-3 h-3 text-cyan-400"></i> Connect Google Analytics</span>
+            <span class="text-cyan-400 text-[10px] group-hover:underline">+ Connect</span>
+          </button>
+          <button onclick="startGuidedTour()" class="w-full flex items-center justify-between hover:text-white transition group text-left text-slate-300 pt-1">
+            <span class="flex items-center gap-2"><i data-lucide="help-circle" class="w-3 h-3 text-amber-400"></i> Onboarding Tour</span>
+            <span class="text-amber-400 text-[10px]">Start -></span>
+          </button>
+        </div>
+      </nav>
+    </div>
+
+    <!-- Developer Credit / Engineer Tag -->
+    <div class="pt-5 border-t border-white/10 mt-5">
+      <div class="p-3.5 rounded-2xl bg-fintech-950/90 border border-white/10 flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-500 to-emerald-400 p-[1.5px] shrink-0">
+          <div class="w-full h-full bg-fintech-900 rounded-[10px] flex items-center justify-center font-mono font-bold text-emerald-400 text-xs">SR</div>
+        </div>
+        <div class="truncate">
+          <span class="text-xs font-bold text-white block truncate">Sohail Rasheed</span>
+          <span class="text-[10px] font-mono text-cyan-400 block truncate">Lead SaaS Architect</span>
+        </div>
+      </div>
+      <div class="mt-3 flex items-center justify-between text-[11px] font-mono text-slate-400 px-1">
+        <a href="https://portfolio-steel-three-ttwaf25yc4.vercel.app" class="hover:text-cyan-400 transition flex items-center gap-1">
+          <i data-lucide="arrow-left" class="w-3 h-3"></i> Main Portfolio
+        </a>
+        <a href="https://wa.me/923142202047" target="_blank" class="text-emerald-400 hover:underline font-bold">
+          Hire Dev ->
+        </a>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- MAIN APPLICATION AREA -->
+  <main class="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full space-y-6 pt-10">
+    
+    <!-- TOP APP BAR -->
+    <div id="overview" class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/10">
+      <div>
+        <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 text-[11px] font-mono mb-2">
+          <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping"></span>
+          <span>US & UK Market Telemetry • Live WebSocket Stream</span>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+          Executive SaaS Revenue Dashboard
+        </h1>
+        <p class="text-slate-400 text-xs sm:text-sm">
+          Monitoring subscription performance across San Francisco, New York, London & Manchester accounts.
+        </p>
+      </div>
+
+      <!-- Controls & Quick Actions -->
+      <div class="flex flex-wrap items-center gap-2.5 font-mono text-xs">
+        
+        <!-- Command Palette Button (Cmd+K) -->
+        <button onclick="toggleCommandPalette()" class="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl bg-fintech-900 border border-white/10 text-slate-300 hover:text-white hover:border-cyan-400 transition">
+          <i data-lucide="search" class="w-3.5 h-3.5 text-cyan-400"></i>
+          <span>Actions</span>
+          <kbd class="px-1.5 py-0.5 rounded bg-white/10 text-[10px] text-slate-400 font-mono">⌘K</kbd>
+        </button>
+
+        <!-- Dark/Light Theme Toggle -->
+        <button onclick="toggleTheme()" title="Toggle Dark / Light Theme" class="p-2.5 rounded-xl bg-fintech-900 border border-white/10 text-slate-300 hover:text-white transition">
+          <i data-lucide="sun-moon" class="w-4 h-4"></i>
+        </button>
+
+        <!-- Notifications Dropdown Trigger -->
+        <div class="relative font-mono">
+          <button id="notifBellBtn" onclick="toggleNotificationsDropdown()" class="relative p-2.5 rounded-xl bg-fintech-900 border border-white/10 text-slate-300 hover:text-white hover:border-cyan-400 transition flex items-center justify-center">
+            <i data-lucide="bell" class="w-4 h-4"></i>
+            <span id="notifBadge" class="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white rounded-full text-[9px] font-bold flex items-center justify-center animate-pulse">
+              3
+            </span>
+          </button>
+
+          <!-- Notifications Dropdown Menu -->
+          <div id="notificationsDropdown" class="absolute right-0 mt-2 w-80 sm:w-96 bg-fintech-900/95 border border-white/15 rounded-2xl shadow-2xl backdrop-blur-2xl p-4 z-50 hidden space-y-3 font-mono text-xs">
+            <div class="flex items-center justify-between pb-2 border-b border-white/10">
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-white">Security & Billing Telemetry</span>
+                <span id="unreadCountBadge" class="px-1.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-300 text-[10px] border border-cyan-500/20">3 new</span>
+              </div>
+              <button onclick="markAllNotificationsRead()" class="text-[10px] text-slate-400 hover:text-cyan-300 underline">Clear all</button>
+            </div>
+
+            <!-- Notification Items List -->
+            <div id="notifList" class="space-y-2 max-h-80 overflow-y-auto pr-1">
+              <div class="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 space-y-1.5">
+                <div class="flex items-center justify-between">
+                  <span class="text-rose-400 font-bold flex items-center gap-1.5 text-[11px]">
+                    <i data-lucide="alert-octagon" class="w-3.5 h-3.5"></i> Payment Past Due
+                  </span>
+                  <span class="text-[10px] text-slate-400">18m ago</span>
+                </div>
+                <p class="text-slate-300 text-[11px]">VeloMed Health LLC invoice payment failed (Card expired: Visa ···· 4242).</p>
+                <button onclick="openDunningModal('VeloMed Health LLC', 1200, 'US')" class="text-[10px] text-rose-300 font-bold hover:underline flex items-center gap-1">
+                  Open Dunning Workflow ->
+                </button>
+              </div>
+
+              <div class="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 space-y-1.5">
+                <div class="flex items-center justify-between">
+                  <span class="text-amber-400 font-bold flex items-center gap-1.5 text-[11px]">
+                    <i data-lucide="trending-down" class="w-3.5 h-3.5"></i> Usage Decay Warning
+                  </span>
+                  <span class="text-[10px] text-slate-400">2h ago</span>
+                </div>
+                <p class="text-slate-300 text-[11px]">DataWave AI Labs active sessions decreased by -34.2% MoM.</p>
+                <button onclick="inspectAccount('datawave')" class="text-[10px] text-amber-300 font-bold hover:underline flex items-center gap-1">
+                  Inspect Telemetry ->
+                </button>
+              </div>
+
+              <div class="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 space-y-1.5">
+                <div class="flex items-center justify-between">
+                  <span class="text-emerald-400 font-bold flex items-center gap-1.5 text-[11px]">
+                    <i data-lucide="zap" class="w-3.5 h-3.5"></i> Webhook Event Synced
+                  </span>
+                  <span class="text-[10px] text-slate-400">5h ago</span>
+                </div>
+                <p class="text-slate-300 text-[11px]">Apex Retail Logic Ltd renewed Annual Enterprise tier (£38,400 ARR).</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Currency Switcher -->
+        <div class="flex items-center bg-fintech-900 border border-white/10 rounded-xl p-1 shadow-sm">
+          <button onclick="setCurrency('USD')" id="btnUSD" class="px-3 py-1.5 rounded-lg bg-cyan-500 text-slate-950 font-bold transition">
+            $ USD
+          </button>
+          <button onclick="setCurrency('GBP')" id="btnGBP" class="px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition">
+            £ GBP
+          </button>
+        </div>
+
+        <!-- Timeframe Dropdown -->
+        <select onchange="updateTimeframe(this.value)" id="timeframeSelect" class="bg-fintech-900 border border-white/10 rounded-xl px-3 py-2 text-slate-300 font-mono text-xs focus:outline-none focus:border-cyan-400 cursor-pointer">
+          <option value="30d">Last 30 Days (Trailing)</option>
+          <option value="90d">Q3 2026 Trailing</option>
+          <option value="ytd">Year to Date (2026)</option>
+        </select>
+
+        <!-- Demo Mode Sign-In / User Button -->
+        <button onclick="openDemoLoginModal()" class="px-3 py-2 rounded-xl bg-fintech-900 border border-white/10 text-slate-200 hover:text-white transition flex items-center gap-1.5">
+          <i data-lucide="user-check" class="w-3.5 h-3.5 text-emerald-400"></i>
+          <span class="hidden sm:inline">Demo User</span>
+        </button>
+
+        <!-- New Customer Action -->
+        <button onclick="openNewCustomerModal()" class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-bold tracking-wide transition flex items-center gap-1.5 shadow-md shadow-emerald-500/20 active:scale-95">
+          <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+          <span>New Subscription</span>
+        </button>
+
+      </div>
+    </div>
+
+    <!-- PRIMARY KPI METRIC CARDS (WITH LIVE TICKING COUNTER) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 font-mono">
+      
+      <!-- Metric 1: MRR -->
+      <div class="fintech-card rounded-2xl p-5 relative overflow-hidden group">
+        <div class="flex items-center justify-between text-slate-400 text-xs mb-2">
+          <span>MONTHLY RECURRING (MRR)</span>
+          <span class="text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded text-[10px] font-bold">
+            +18.4% MoM
+          </span>
+        </div>
+        <div id="metricMRR" class="text-2xl sm:text-3xl font-black text-white tracking-tight transition-colors duration-300">
+          $142,850
+        </div>
+        <div class="flex items-center justify-between text-[11px] text-slate-400 mt-3 pt-3 border-t border-white/5">
+          <span>ARR Run Rate:</span>
+          <span id="metricARR" class="text-cyan-300 font-bold">$1,714,200</span>
+        </div>
+      </div>
+
+      <!-- Metric 2: Net Revenue Retention (NRR) -->
+      <div class="fintech-card rounded-2xl p-5">
+        <div class="flex items-center justify-between text-slate-400 text-xs mb-2">
+          <span>NET REVENUE RETENTION</span>
+          <span class="text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded text-[10px] font-bold">
+            Top Quartile
+          </span>
+        </div>
+        <div id="metricNRR" class="text-2xl sm:text-3xl font-black text-white tracking-tight">
+          114.2%
+        </div>
+        <div class="flex items-center justify-between text-[11px] text-slate-400 mt-3 pt-3 border-t border-white/5">
+          <span>Benchmark:</span>
+          <span id="metricBenchmark" class="text-slate-300 font-semibold">&gt; 110% Target</span>
+        </div>
+      </div>
+
+      <!-- Metric 3: Active Platform Users (LIVE TICKING WOW FEATURE) -->
+      <div class="fintech-card rounded-2xl p-5">
+        <div class="flex items-center justify-between text-slate-400 text-xs mb-2">
+          <span>LIVE ACTIVE USERS</span>
+          <span class="text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded text-[10px] font-bold flex items-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> PULSING
+          </span>
+        </div>
+        <div id="metricActiveUsers" class="text-2xl sm:text-3xl font-black text-emerald-400 tracking-tight transition-all duration-300">
+          8,420
+        </div>
+        <div class="flex items-center justify-between text-[11px] text-slate-400 mt-3 pt-3 border-t border-white/5">
+          <span>Logo Churn:</span>
+          <span class="text-slate-300 font-semibold">0.82% (Industry Low)</span>
+        </div>
+      </div>
+
+      <!-- Metric 4: Customer LTV / CAC Ratio -->
+      <div class="fintech-card rounded-2xl p-5">
+        <div class="flex items-center justify-between text-slate-400 text-xs mb-2">
+          <span>LTV : CAC RATIO</span>
+          <span class="text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded text-[10px] font-bold">
+            6.2x Ratio
+          </span>
+        </div>
+        <div id="metricLTV" class="text-2xl sm:text-3xl font-black text-cyan-300 tracking-tight">
+          $4,250 LTV
+        </div>
+        <div class="flex items-center justify-between text-[11px] text-slate-400 mt-3 pt-3 border-t border-white/5">
+          <span>Blended CAC:</span>
+          <span id="metricCAC" class="text-slate-300 font-semibold">$680 Acquisition</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- MAIN INTERACTIVE CHART SECTION -->
+    <div id="chart-section" class="fintech-card rounded-3xl p-5 sm:p-7 space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-white/5">
+        <div>
+          <div class="flex items-center gap-2">
+            <h3 class="text-lg font-bold text-white tracking-tight">Trailing Revenue & Subscription Trajectory</h3>
+            <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px] font-mono border border-emerald-500/20">Simulated Stripe sync</span>
+          </div>
+          <p class="text-slate-400 text-xs font-mono">Normalized currency telemetry aggregated by simulated state store.</p>
+        </div>
+
+        <!-- Metric Switchers for the Chart -->
+        <div class="flex items-center gap-1.5 font-mono text-xs">
+          <button onclick="switchChartMetric('mrr')" id="chartBtnMRR" class="px-3 py-1.5 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold transition">
+            MRR Growth
+          </button>
+          <button onclick="switchChartMetric('churn')" id="chartBtnChurn" class="px-3 py-1.5 rounded-lg bg-fintech-900 text-slate-400 hover:text-white border border-white/5 transition">
+            Net Churn %
+          </button>
+          <button onclick="switchChartMetric('arpu')" id="chartBtnARPU" class="px-3 py-1.5 rounded-lg bg-fintech-900 text-slate-400 hover:text-white border border-white/5 transition">
+            ARPU ($)
+          </button>
+        </div>
+      </div>
+
+      <!-- Chart Container -->
+      <div class="relative w-full h-72 sm:h-80">
+        <canvas id="revenueChart"></canvas>
+      </div>
+    </div>
+
+    <!-- AI REVENUE INTELLIGENCE COPILOT (WOW FEATURE) -->
+    <div id="aiCopilotSection" class="fintech-card rounded-3xl p-5 sm:p-7 space-y-4 border border-cyan-500/30">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/5">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-500 via-sky-400 to-violet-500 p-[1.5px] flex items-center justify-center shadow-lg shadow-cyan-500/20">
+            <div class="w-full h-full bg-fintech-950 rounded-[10px] flex items-center justify-center font-mono font-bold text-cyan-400 text-xs">
+              AI
+            </div>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="text-lg font-bold text-white tracking-tight">PulseAI Revenue Copilot</h3>
+              <span class="px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-300 text-[10px] font-mono border border-cyan-500/20">Simulated Analytical Engine</span>
+            </div>
+            <p class="text-slate-400 text-xs font-mono">Executive analytical intelligence querying your real-time Stripe and Cohort telemetry (simulated).</p>
+          </div>
+        </div>
+        <span class="text-[11px] font-mono text-emerald-400 flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Copilot Ready
+        </span>
+      </div>
+
+      <!-- Quick Prompt Chips -->
+      <div class="flex flex-wrap items-center gap-2 font-mono text-xs">
+        <span class="text-slate-500 text-[11px]">Suggested Prompts:</span>
+        <button onclick="askCopilot('why-churn-drop')" class="px-3 py-1.5 rounded-xl bg-fintech-900 hover:bg-white/5 border border-white/10 text-slate-300 hover:text-white transition">
+          Why did churn drop to 0.82%?
+        </button>
+        <button onclick="askCopilot('arr-forecast')" class="px-3 py-1.5 rounded-xl bg-fintech-900 hover:bg-white/5 border border-white/10 text-slate-300 hover:text-white transition">
+          Forecast ARR for next 2 quarters
+        </button>
+        <button onclick="askCopilot('expansion-tier')" class="px-3 py-1.5 rounded-xl bg-fintech-900 hover:bg-white/5 border border-white/10 text-slate-300 hover:text-white transition">
+          Best expansion revenue tier
+        </button>
+        <button onclick="askCopilot('dunning-recommendation')" class="px-3 py-1.5 rounded-xl bg-fintech-900 hover:bg-white/5 border border-white/10 text-slate-300 hover:text-white transition">
+          Action plan for VeloMed Health
+        </button>
+      </div>
+
+      <!-- AI Response Container -->
+      <div id="aiResponseBox" class="p-4 rounded-2xl bg-fintech-950 border border-white/5 font-mono text-xs space-y-2">
+        <div class="flex items-center justify-between text-slate-400 text-[11px]">
+          <span class="flex items-center gap-1.5 text-cyan-400 font-bold">
+            <i data-lucide="bot" class="w-3.5 h-3.5"></i> PulseAI Analysis
+          </span>
+          <span id="aiTimestamp">Just now</span>
+        </div>
+        <p id="aiAnswerText" class="text-slate-200 leading-relaxed">
+          Select one of the suggested prompts above or ask custom financial queries. PulseAI correlates Stripe webhooks, logo churn decay, and customer health telemetry with zero latency.
+        </p>
+      </div>
+    </div>
+
+    <!-- REAL-TIME STRIPE WEBHOOK SIMULATOR FEED -->
+    <div id="webhook-section" class="fintech-card rounded-3xl p-5 sm:p-6 space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/5">
+        <div>
+          <div class="flex items-center gap-2">
+            <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></div>
+            <h3 class="text-base font-bold text-white tracking-tight">Live Stripe Billing Webhook Stream</h3>
+            <span class="px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-300 text-[10px] font-mono border border-cyan-500/20">whsec_demo_xxxx</span>
+          </div>
+          <p class="text-slate-400 text-xs font-mono">Simulating sub-millisecond idempotency events from US & UK payment gateways.</p>
+        </div>
+
+        <!-- Simulator Controls -->
+        <div class="flex flex-wrap items-center gap-2 font-mono text-xs">
+          <button onclick="triggerSimulatedWebhook()" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-cyan-500 to-sky-500 text-slate-950 font-bold hover:opacity-90 transition flex items-center gap-1.5 shadow-sm active:scale-95">
+            <i data-lucide="play" class="w-3.5 h-3.5"></i> Trigger Webhook
+          </button>
+          <button onclick="toggleWebhookAutoStream()" id="webhookPauseBtn" class="px-3 py-1.5 rounded-xl bg-fintech-900 border border-white/10 text-slate-300 hover:text-white transition flex items-center gap-1.5">
+            <i data-lucide="pause" class="w-3.5 h-3.5"></i> Pause Feed
+          </button>
+          <button onclick="clearWebhookFeed()" title="Clear Feed" class="px-2.5 py-1.5 rounded-xl bg-fintech-900 border border-white/10 text-slate-400 hover:text-white transition">
+            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Webhook Terminal Feed Log -->
+      <div id="webhookFeed" class="space-y-2 max-h-56 overflow-y-auto pr-1 font-mono text-xs"></div>
+    </div>
+
+    <!-- INTERACTIVE COHORT RETENTION MATRIX HEATMAP (MONTHS 0-6) -->
+    <div id="cohort-section" class="fintech-card rounded-3xl p-5 sm:p-7 space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/5">
+        <div>
+          <div class="flex items-center gap-2">
+            <h3 class="text-lg font-bold text-white tracking-tight">Interactive Cohort Retention Matrix</h3>
+            <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300 text-[10px] font-mono border border-emerald-500/20">Trailing 6 Months</span>
+          </div>
+          <p class="text-slate-400 text-xs font-mono">Heatmap analyzing Logo & Net Dollar Retention (NDR) decay for US/UK B2B contracts.</p>
+        </div>
+
+        <!-- Metric Mode Switcher -->
+        <div class="flex items-center gap-1.5 font-mono text-xs">
+          <button onclick="setCohortMode('logo')" id="btnCohortLogo" class="px-3 py-1.5 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold transition">
+            Logo Retention %
+          </button>
+          <button onclick="setCohortMode('ndr')" id="btnCohortNDR" class="px-3 py-1.5 rounded-lg bg-fintech-900 text-slate-400 hover:text-white border border-white/5 transition">
+            Net Dollar (NDR) %
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobile Scroll Cue -->
+      <div class="md:hidden flex items-center justify-between text-[11px] font-mono text-cyan-400 bg-cyan-500/10 px-3 py-1.5 rounded-xl border border-cyan-500/20 mb-2">
+        <span class="flex items-center gap-1.5 font-bold">
+          <i data-lucide="arrow-left-right" class="w-3.5 h-3.5 animate-pulse"></i>
+          <span>Swipe retention heatmap</span>
+        </span>
+        <span class="text-[10px] text-slate-400 font-semibold">9 Months -></span>
+      </div>
+
+      <!-- Retention Matrix Heatmap Table -->
+      <div class="overflow-x-auto -mx-1 sm:mx-0 px-1 sm:px-0">
+        <table class="w-full text-center font-mono text-xs border-collapse min-w-[700px] whitespace-nowrap">
+          <thead>
+            <tr class="text-slate-400 border-b border-white/10 text-[11px]">
+              <th class="py-2.5 px-3 text-left font-semibold min-w-[90px]">COHORT</th>
+              <th class="py-2.5 px-3 font-semibold min-w-[65px]">SIZE</th>
+              <th class="py-2.5 px-3 font-semibold min-w-[75px]">MONTH 0</th>
+              <th class="py-2.5 px-3 font-semibold min-w-[75px]">MONTH 1</th>
+              <th class="py-2.5 px-3 font-semibold min-w-[75px]">MONTH 2</th>
+              <th class="py-2.5 px-3 font-semibold min-w-[75px]">MONTH 3</th>
+              <th class="py-2.5 px-3 font-semibold min-w-[75px]">MONTH 4</th>
+              <th class="py-2.5 px-3 font-semibold min-w-[75px]">MONTH 5</th>
+              <th class="py-2.5 px-3 font-semibold min-w-[75px]">MONTH 6</th>
+            </tr>
+          </thead>
+          <tbody id="cohortTableBody" class="divide-y divide-white/5 text-slate-200"></tbody>
+        </table>
+      </div>
+
+      <div class="flex flex-wrap items-center justify-between text-[11px] font-mono text-slate-400 pt-2 border-t border-white/5">
+        <span>Retention Index: <strong class="text-emerald-400">&gt;95% (Elite)</strong> · <strong class="text-cyan-400">90-95% (Healthy)</strong> · <strong class="text-amber-400">80-89% (At Risk)</strong> · <strong class="text-rose-400">&lt;80% (Critical)</strong></span>
+        <span class="text-cyan-300">Target Benchmark: &gt;110% Net Dollar Expansion</span>
+      </div>
+    </div>
+
+    <!-- RECENT CLIENT CONTRACTS & CHURN PREDICTOR TABLE -->
+    <div id="subscribers-section" class="fintech-card rounded-3xl p-5 sm:p-7 space-y-4 overflow-hidden">
+      
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/5">
+        <div>
+          <h3 class="text-lg font-bold text-white tracking-tight">Active Accounts & Automated Churn Predictor</h3>
+          <p class="text-slate-400 text-xs font-mono">Machine learning telemetry tracking usage decay and payment risk.</p>
+        </div>
+
+        <!-- Search Bar & CSV Export -->
+        <div class="flex items-center gap-2 font-mono text-xs">
+          <button onclick="exportSubscribersToCSV()" class="px-3 py-2 rounded-xl bg-fintech-900 border border-white/15 text-slate-200 hover:text-white hover:border-cyan-400 font-bold transition flex items-center gap-1.5 shadow-sm active:scale-95">
+            <i data-lucide="download" class="w-3.5 h-3.5 text-cyan-400"></i>
+            <span>Export CSV</span>
+          </button>
+          <div class="relative">
+            <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5"></i>
+            <input type="text" id="accountSearch" oninput="filterAccounts(this.value)" placeholder="Search company or location..." class="bg-fintech-950 border border-white/10 rounded-xl pl-8 pr-3 py-2 text-slate-200 placeholder:text-slate-500 text-xs focus:outline-none focus:border-cyan-400 w-44 sm:w-60">
+          </div>
+        </div>
+      </div>
+
+      <!-- Filter Pills -->
+      <div class="flex items-center gap-2 font-mono text-xs overflow-x-auto pb-1">
+        <button onclick="filterTableByRegion('all')" id="pillAll" class="px-3 py-1 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold">All Accounts (6)</button>
+        <button onclick="filterTableByRegion('US')" id="pillUS" class="px-3 py-1 rounded-lg bg-fintech-900 text-slate-400 hover:text-white border border-white/5">US Accounts</button>
+        <button onclick="filterTableByRegion('UK')" id="pillUK" class="px-3 py-1 rounded-lg bg-fintech-900 text-slate-400 hover:text-white border border-white/5">UK Accounts</button>
+        <button onclick="filterTableByRegion('risk')" id="pillRisk" class="px-3 py-1 rounded-lg bg-fintech-900 text-slate-400 hover:text-white border border-white/5">At-Risk Only</button>
+      </div>
+
+      <!-- Mobile Scroll Cue -->
+      <div class="md:hidden flex items-center justify-between text-[11px] font-mono text-cyan-400 bg-cyan-500/10 px-3 py-1.5 rounded-xl border border-cyan-500/20 mb-2">
+        <span class="flex items-center gap-1.5 font-bold">
+          <i data-lucide="arrow-left-right" class="w-3.5 h-3.5 animate-pulse"></i>
+          <span>Swipe accounts horizontally</span>
+        </span>
+        <span class="text-[10px] text-slate-400 font-semibold">7 Columns -></span>
+      </div>
+
+      <!-- Table Container -->
+      <div class="overflow-x-auto -mx-1 sm:mx-0 px-1 sm:px-0">
+        <table class="w-full text-left font-mono text-xs min-w-[850px] whitespace-nowrap">
+          <thead>
+            <tr class="text-slate-400 border-b border-white/10 text-[11px]">
+              <th class="pb-3 px-3.5 font-semibold min-w-[200px]">SUBSCRIBER COMPANY</th>
+              <th class="pb-3 px-3.5 font-semibold min-w-[140px]">LOCATION (HQ)</th>
+              <th class="pb-3 px-3.5 font-semibold min-w-[120px]">PLAN & TIER</th>
+              <th class="pb-3 px-3.5 font-semibold min-w-[120px]">MONTHLY VALUE</th>
+              <th class="pb-3 px-3.5 font-semibold min-w-[130px]">HEALTH SCORE</th>
+              <th class="pb-3 px-3.5 font-semibold min-w-[100px]">CHURN RISK</th>
+              <th class="pb-3 px-3.5 font-semibold text-right min-w-[110px]">ACTION</th>
+            </tr>
+          </thead>
+          <tbody id="accountsTableBody" class="divide-y divide-white/5">
+            <!-- Injected from mockData.js dynamically -->
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+
+    <!-- REVENUE ARCHITECTURE PITCH -->
+    <div class="fintech-card rounded-3xl p-6 sm:p-8 space-y-4 border border-cyan-500/30 bg-fintech-900/90">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <span class="text-xs font-mono font-bold text-cyan-400 uppercase tracking-wider">FULL-STACK ARCHITECTURE SPEC</span>
+          <h3 class="text-xl font-bold text-white mt-1">Need a bespoke SaaS Platform built for your company?</h3>
+          <p class="text-slate-300 text-xs sm:text-sm mt-1 max-w-2xl">
+            This live demonstration proves multi-currency handling (USD/GBP), real-time aggregation queries, idempotency with Stripe Billing webhooks, and sub-35ms page render speeds. Built by Sohail Rasheed.
+          </p>
+        </div>
+        <div class="flex flex-wrap items-center gap-3 shrink-0">
+          <a href="https://wa.me/923142202047?text=Hi%20Sohail%2C%20I%20saw%20your%20PulseMetrics%20SaaS%20build%20and%20want%20to%20discuss%20a%20project" target="_blank" class="px-5 py-3 rounded-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs tracking-wide transition flex items-center gap-2 shadow-lg shadow-emerald-500/25 active:scale-95">
+            <i data-lucide="phone" class="w-4 h-4"></i>
+            <span>Chat on WhatsApp (+92 314 2202047)</span>
+          </a>
+          <a href="https://www.linkedin.com/in/sohail-rasheedd/" target="_blank" class="px-5 py-3 rounded-full bg-fintech-800 hover:bg-white/10 text-white font-semibold text-xs border border-white/10 transition flex items-center gap-2">
+            <i data-lucide="linkedin" class="w-4 h-4 text-cyan-400"></i>
+            <span>Connect on LinkedIn</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- MODAL: COMMAND PALETTE (CMD+K / CTRL+K) -->
+  <div id="cmdPaletteModal" class="fixed inset-0 z-50 flex items-start justify-center pt-20 p-4 bg-black/75 backdrop-blur-md opacity-0 pointer-events-none transition-all duration-200">
+    <div class="fintech-card rounded-3xl p-4 max-w-xl w-full border border-cyan-500/40 bg-fintech-900 shadow-2xl space-y-3 font-mono text-xs">
+      <div class="flex items-center gap-2 px-3 py-2 rounded-2xl bg-fintech-950 border border-white/10">
+        <i data-lucide="search" class="w-4 h-4 text-cyan-400"></i>
+        <input type="text" id="cmdPaletteInput" oninput="filterPalette(this.value)" placeholder="Type a command or jump to feature (e.g. tour, export, gbp)..." class="w-full bg-transparent text-white focus:outline-none placeholder:text-slate-500 text-xs">
+        <span class="text-[10px] px-1.5 py-0.5 rounded bg-white/10 text-slate-400">ESC</span>
+      </div>
+
+      <div id="paletteItemsList" class="space-y-1 max-h-72 overflow-y-auto pr-1">
+        <button onclick="executePalette('tour')" class="palette-item w-full text-left p-2.5 rounded-xl hover:bg-cyan-500/10 text-slate-200 hover:text-cyan-300 flex items-center justify-between transition">
+          <span class="flex items-center gap-2"><i data-lucide="compass" class="w-4 h-4 text-cyan-400"></i> Start Guided Product Tour</span>
+          <span class="text-[10px] text-slate-500">Walkthrough</span>
+        </button>
+        <button onclick="executePalette('csv')" class="palette-item w-full text-left p-2.5 rounded-xl hover:bg-cyan-500/10 text-slate-200 hover:text-cyan-300 flex items-center justify-between transition">
+          <span class="flex items-center gap-2"><i data-lucide="download" class="w-4 h-4 text-emerald-400"></i> Export Subscribers to CSV</span>
+          <span class="text-[10px] text-slate-500">Download</span>
+        </button>
+        <button onclick="executePalette('gbp')" class="palette-item w-full text-left p-2.5 rounded-xl hover:bg-cyan-500/10 text-slate-200 hover:text-cyan-300 flex items-center justify-between transition">
+          <span class="flex items-center gap-2"><i data-lucide="coins" class="w-4 h-4 text-violet-400"></i> Switch Currency to £ GBP (UK)</span>
+          <span class="text-[10px] text-slate-500">Currency</span>
+        </button>
+        <button onclick="executePalette('usd')" class="palette-item w-full text-left p-2.5 rounded-xl hover:bg-cyan-500/10 text-slate-200 hover:text-cyan-300 flex items-center justify-between transition">
+          <span class="flex items-center gap-2"><i data-lucide="dollar-sign" class="w-4 h-4 text-emerald-400"></i> Switch Currency to $ USD (US)</span>
+          <span class="text-[10px] text-slate-500">Currency</span>
+        </button>
+        <button onclick="executePalette('theme')" class="palette-item w-full text-left p-2.5 rounded-xl hover:bg-cyan-500/10 text-slate-200 hover:text-cyan-300 flex items-center justify-between transition">
+          <span class="flex items-center gap-2"><i data-lucide="sun-moon" class="w-4 h-4 text-amber-400"></i> Toggle Dark / Light Luxe Mode</span>
+          <span class="text-[10px] text-slate-500">Appearance</span>
+        </button>
+        <button onclick="executePalette('webhook')" class="palette-item w-full text-left p-2.5 rounded-xl hover:bg-cyan-500/10 text-slate-200 hover:text-cyan-300 flex items-center justify-between transition">
+          <span class="flex items-center gap-2"><i data-lucide="zap" class="w-4 h-4 text-cyan-400"></i> Trigger Live Stripe Webhook</span>
+          <span class="text-[10px] text-slate-500">Simulation</span>
+        </button>
+        <button onclick="executePalette('oauth')" class="palette-item w-full text-left p-2.5 rounded-xl hover:bg-cyan-500/10 text-slate-200 hover:text-cyan-300 flex items-center justify-between transition">
+          <span class="flex items-center gap-2"><i data-lucide="link-2" class="w-4 h-4 text-sky-400"></i> Connect Stripe Gateway (OAuth Flow)</span>
+          <span class="text-[10px] text-slate-500">Integration</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GUIDED ONBOARDING PRODUCT TOUR TOOLTIP OVERLAY -->
+  <div id="tourOverlay" class="fixed inset-0 z-50 pointer-events-none opacity-0 transition-opacity duration-300">
+    <div id="tourCard" class="absolute pointer-events-auto fintech-card rounded-3xl p-5 max-w-sm w-full border border-cyan-400 bg-fintech-900 shadow-2xl space-y-3 font-mono text-xs z-50">
+      <div class="flex items-center justify-between text-[11px] text-slate-400 pb-1 border-b border-white/10">
+        <span class="text-cyan-400 font-bold flex items-center gap-1.5">
+          <i data-lucide="compass" class="w-3.5 h-3.5"></i> <span id="tourStepBadge">Step 1 of 6</span>
+        </span>
+        <button onclick="endGuidedTour()" class="hover:text-white">Skip Tour</button>
+      </div>
+      <div>
+        <h4 id="tourStepTitle" class="text-sm font-bold text-white mb-1">Executive KPI Metrics</h4>
+        <p id="tourStepDesc" class="text-slate-300 leading-relaxed text-[11px]">Overview of real-time SaaS financial performance.</p>
+      </div>
+      <div class="flex items-center justify-between pt-2">
+        <button onclick="prevTourStep()" id="tourPrevBtn" class="px-3 py-1.5 rounded-xl bg-fintech-800 text-slate-300 hover:text-white transition">Back</button>
+        <button onclick="nextTourStep()" id="tourNextBtn" class="px-4 py-1.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold transition">Next -></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: SIMULATED OAUTH CONNECT GATEWAY -->
+  <div id="oauthModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md opacity-0 pointer-events-none transition-all duration-300">
+    <div class="fintech-card rounded-3xl p-6 sm:p-8 max-w-md w-full border border-cyan-500/30 bg-fintech-900 shadow-2xl space-y-5 font-mono text-xs text-center">
+      <div class="w-14 h-14 rounded-2xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center mx-auto border border-cyan-500/30">
+        <i data-lucide="shield-check" class="w-7 h-7"></i>
+      </div>
+      <div>
+        <h3 class="text-lg font-bold text-white" id="oauthModalTitle">Connect Stripe Billing API</h3>
+        <p class="text-slate-400 text-xs mt-1">Authorize PulseMetrics to ingest multi-currency webhook subscriptions with zero backend setup.</p>
+      </div>
+      
+      <div id="oauthIdleState" class="space-y-3">
+        <div class="p-3 rounded-2xl bg-fintech-950 border border-white/5 text-left text-[11px] text-slate-300 space-y-1.5">
+          <div class="flex items-center gap-2"><i data-lucide="check-circle" class="w-3.5 h-3.5 text-emerald-400"></i> Read-only customer telemetry</div>
+          <div class="flex items-center gap-2"><i data-lucide="check-circle" class="w-3.5 h-3.5 text-emerald-400"></i> Automated dunning webhook verification</div>
+          <div class="flex items-center gap-2"><i data-lucide="check-circle" class="w-3.5 h-3.5 text-emerald-400"></i> AES-256 encrypted webhook handshake</div>
+        </div>
+        <button onclick="startSimulatedOAuth()" class="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-emerald-500 text-slate-950 font-bold tracking-wide transition shadow-md shadow-cyan-500/20 active:scale-95">
+          Authorize & Sync Gateway ->
+        </button>
+      </div>
+
+      <div id="oauthLoadingState" class="hidden py-6 space-y-3">
+        <div class="w-10 h-10 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+        <p class="text-cyan-300 font-bold" id="oauthStatusMsg">Establishing TLS 1.3 handshake with Stripe US...</p>
+      </div>
+
+      <div id="oauthSuccessState" class="hidden py-4 space-y-3">
+        <div class="w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto">
+          <i data-lucide="check" class="w-6 h-6"></i>
+        </div>
+        <div class="text-white font-bold text-base">Gateway Connected!</div>
+        <p class="text-slate-300 text-xs">14,892 historical subscription events synced with 18ms latency.</p>
+        <button onclick="closeOAuthModal()" class="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold transition">
+          Return to Dashboard
+        </button>
+      </div>
+
+      <button onclick="closeOAuthModal()" class="text-slate-500 hover:text-white text-xs underline block mx-auto">Cancel</button>
+    </div>
+  </div>
+
+  <!-- MODAL: PRE-FILLED DEMO LOGIN -->
+  <div id="demoLoginModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md opacity-0 pointer-events-none transition-all duration-300">
+    <div class="fintech-card rounded-3xl p-6 sm:p-8 max-w-sm w-full border border-cyan-500/30 bg-fintech-900 shadow-2xl space-y-4 font-mono text-xs">
+      <div class="flex items-center justify-between pb-2 border-b border-white/10">
+        <div>
+          <h3 class="font-bold text-white text-base">Demo User Profile</h3>
+          <span class="text-slate-400 text-[10px]">Pre-configured executive access</span>
+        </div>
+        <button onclick="closeDemoLoginModal()" class="text-slate-400 hover:text-white p-1">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="p-3.5 rounded-2xl bg-fintech-950 border border-white/5 space-y-2">
+        <div>
+          <span class="text-slate-400 text-[10px] block">DEMO ACCOUNT</span>
+          <span class="text-white font-bold text-xs">demo.executive@pulsemetrics.io</span>
+        </div>
+        <div>
+          <span class="text-slate-400 text-[10px] block">SECURITY CLEARANCE</span>
+          <span class="text-emerald-400 font-bold text-xs">Super Admin (US & UK Full Scope)</span>
+        </div>
+      </div>
+
+      <button onclick="simulatedLoginSuccess()" class="w-full py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold transition active:scale-95 flex items-center justify-center gap-1.5">
+        <i data-lucide="check" class="w-3.5 h-3.5"></i> Authenticate Demo Session
+      </button>
+    </div>
+  </div>
+
+  <!-- MODALS: ADD NEW CUSTOMER, TELEMETRY, DUNNING -->
+  <!-- MODAL: ADD NEW CUSTOMER -->
+  <div id="newCustomerModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md opacity-0 pointer-events-none transition-all duration-300">
+    <div class="fintech-card rounded-3xl p-6 sm:p-8 max-w-md w-full border border-cyan-500/30 bg-fintech-900 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-white/10">
+        <div>
+          <h3 class="font-bold text-white text-base">Add New SaaS Subscriber</h3>
+          <span class="text-slate-400 text-xs font-mono">Simulate Stripe webhook event</span>
+        </div>
+        <button onclick="closeNewCustomerModal()" class="text-slate-400 hover:text-white p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="newCustomerForm" onsubmit="handleNewCustomerSubmit(event)" class="space-y-3 font-mono text-xs">
+        <div>
+          <label class="block text-slate-300 mb-1">Company Name</label>
+          <input type="text" id="custName" required placeholder="e.g. Nexus FinTech Inc." class="w-full bg-fintech-950 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-400">
+        </div>
+        <div>
+          <label class="block text-slate-300 mb-1">Location (US or UK)</label>
+          <input type="text" id="custLoc" required placeholder="e.g. Boston, MA (US) or Edinburgh (UK)" class="w-full bg-fintech-950 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-400">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-slate-300 mb-1">Subscription Tier</label>
+            <select id="custTier" class="w-full bg-fintech-950 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-400">
+              <option value="GROWTH TIER">Growth Tier ($890)</option>
+              <option value="BUSINESS SCALE">Business Scale ($1,850)</option>
+              <option value="ENTERPRISE PRO">Enterprise Pro ($2,400)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-slate-300 mb-1">Monthly MRR ($)</label>
+            <input type="number" id="custMRR" required value="1850" class="w-full bg-fintech-950 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-400">
+          </div>
+        </div>
+
+        <div class="pt-3">
+          <button type="submit" class="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-bold tracking-wide transition shadow-md shadow-emerald-500/20 active:scale-95">
+            Create Active Subscription
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: ACCOUNT INSPECTION TELEMETRY -->
+  <div id="accountTelemetryModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md opacity-0 pointer-events-none transition-all duration-300">
+    <div class="fintech-card rounded-3xl p-6 sm:p-8 max-w-2xl w-full border border-cyan-500/40 bg-fintech-900 shadow-2xl space-y-5 font-mono text-xs max-h-[90vh] overflow-y-auto">
+      <div class="flex items-start justify-between pb-4 border-b border-white/10">
+        <div class="flex items-center gap-3">
+          <div id="modalCompInitials" class="w-12 h-12 rounded-2xl bg-cyan-500/20 text-cyan-300 font-black text-lg flex items-center justify-center border border-cyan-500/30">CS</div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 id="modalCompName" class="font-bold text-white text-lg">CloudScale Systems Inc.</h3>
+              <span id="modalCompBadge" class="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-bold">ACTIVE SUBSCRIBER</span>
+            </div>
+            <div class="text-slate-400 text-xs flex items-center gap-2 mt-0.5">
+              <span id="modalCompDomain">cloudscale.io</span>
+              <span>•</span>
+              <span id="modalCompLocation">San Francisco, CA (US)</span>
+              <span>•</span>
+              <span id="modalStripeCustId" class="text-cyan-400">cus_SF9829x4</span>
+            </div>
+          </div>
+        </div>
+        <button onclick="closeTelemetryModal()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/5 transition">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="p-3 rounded-2xl bg-fintech-950/80 border border-white/5">
+          <div class="text-[10px] text-slate-400 mb-1">CONTRACT MRR</div>
+          <div id="modalMRR" class="text-base font-bold text-emerald-400">$2,400 / mo</div>
+          <div id="modalBillingCycle" class="text-[9px] text-slate-500 mt-0.5">Billed Annually ($28.8k)</div>
+        </div>
+        <div class="p-3 rounded-2xl bg-fintech-950/80 border border-white/5">
+          <div class="text-[10px] text-slate-400 mb-1">SEATS PROVISIONED</div>
+          <div id="modalSeats" class="text-base font-bold text-white">48 / 50 seats</div>
+          <div class="w-full bg-fintech-800 h-1.5 rounded-full mt-1.5 overflow-hidden">
+            <div id="modalSeatProgress" class="bg-cyan-400 h-full rounded-full" style="width: 96%"></div>
+          </div>
+        </div>
+        <div class="p-3 rounded-2xl bg-fintech-950/80 border border-white/5">
+          <div class="text-[10px] text-slate-400 mb-1">HEALTH SCORE</div>
+          <div id="modalHealth" class="text-base font-bold text-emerald-400">98 / 100</div>
+          <div class="text-[9px] text-emerald-400 mt-0.5">Top 5% Superuser</div>
+        </div>
+        <div class="p-3 rounded-2xl bg-fintech-950/80 border border-white/5">
+          <div class="text-[10px] text-slate-400 mb-1">PAYMENT GATEWAY</div>
+          <div id="modalGateway" class="text-base font-bold text-slate-200">Stripe US (ACH)</div>
+          <div class="text-[9px] text-emerald-400 mt-0.5">Auto-Debit Enrolled</div>
+        </div>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-fintech-950 border border-white/5 space-y-3">
+        <div class="flex items-center justify-between">
+          <span class="text-slate-300 font-bold flex items-center gap-1.5">
+            <i data-lucide="activity" class="w-3.5 h-3.5 text-cyan-400"></i> Trailing 7-Day API Consumption
+          </span>
+          <span class="text-[11px] text-slate-400" id="modalApiVolume">1,480,210 Total Requests</span>
+        </div>
+        <div class="h-28 w-full">
+          <canvas id="telemetrySparkline"></canvas>
+        </div>
+        <div class="grid grid-cols-3 gap-2 text-[10px] text-slate-400 pt-2 border-t border-white/5 text-center">
+          <div>p99 Latency: <strong class="text-white" id="modalLatency">42ms</strong></div>
+          <div>Error Rate: <strong class="text-emerald-400" id="modalErrRate">0.002%</strong></div>
+          <div>Webhooks: <strong class="text-white">99.99% Delivered</strong></div>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-white/5">
+        <div class="text-[11px] text-slate-400">
+          Contract renews on <span id="modalRenewalDate" class="text-white font-bold">Nov 14, 2026</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="simulateStripePortalSync()" class="px-4 py-2 rounded-xl bg-fintech-800 hover:bg-fintech-700 text-white font-bold border border-white/10 transition flex items-center gap-1.5 active:scale-95">
+            <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Stripe Portal
+          </button>
+          <button onclick="closeTelemetryModal()" class="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold transition active:scale-95">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: DUNNING & RECOVERY -->
+  <div id="dunningModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md opacity-0 pointer-events-none transition-all duration-300">
+    <div class="fintech-card rounded-3xl p-6 sm:p-8 max-w-xl w-full border border-rose-500/30 bg-fintech-900 shadow-2xl space-y-5 font-mono text-xs max-h-[90vh] overflow-y-auto">
+      <div class="flex items-start justify-between pb-3 border-b border-white/10">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping"></span>
+            <h3 class="font-bold text-white text-base">Fintech Dunning Recovery Engine</h3>
+          </div>
+          <span class="text-slate-400 text-xs font-mono">Automated card recovery & compliant US/UK dunning dispatch</span>
+        </div>
+        <button onclick="closeDunningModal()" class="text-slate-400 hover:text-white p-1 rounded-lg">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="p-3.5 rounded-2xl bg-fintech-950 border border-white/5 flex items-center justify-between">
+        <div>
+          <div class="text-white font-bold" id="dunningCompName">VeloMed Health LLC</div>
+          <div class="text-[10px] text-slate-400" id="dunningDetails">Invoice #INV-2026-904 • Past Due (Failed Stripe Charge)</div>
+        </div>
+        <div class="text-right">
+          <div class="text-rose-400 font-black text-sm" id="dunningAmount">$1,200.00</div>
+          <span class="text-[9px] px-2 py-0.5 rounded bg-rose-500/10 text-rose-300 border border-rose-500/20 font-bold">RETRY 2 OF 4</span>
+        </div>
+      </div>
+
+      <div class="space-y-1.5">
+        <label class="block text-slate-300 font-bold">Dunning Template Protocol</label>
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="setDunningTemplate('US')" id="btnDunningUS" class="p-2.5 rounded-xl bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold text-left transition">
+            <div class="text-xs">US Enterprise SaaS</div>
+            <div class="text-[10px] font-normal text-slate-400">ACH, Delaware Net-30 grace</div>
+          </button>
+          <button onclick="setDunningTemplate('UK')" id="btnDunningUK" class="p-2.5 rounded-xl bg-fintech-950 text-slate-400 border border-white/5 font-bold text-left transition hover:text-white">
+            <div class="text-xs">UK & HMRC Compliant</div>
+            <div class="text-[10px] font-normal text-slate-400">VAT Reg, BACS recovery clause</div>
+          </button>
+        </div>
+      </div>
+
+      <div class="space-y-2">
+        <input type="text" id="dunningSubject" class="w-full bg-fintech-950 border border-white/10 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-cyan-400 font-mono">
+        <textarea id="dunningBody" rows="5" class="w-full bg-fintech-950 border border-white/10 rounded-xl p-3 text-slate-200 text-xs focus:outline-none focus:border-cyan-400 font-mono leading-relaxed"></textarea>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2 pt-1">
+        <button onclick="triggerImmediateStripeRetry()" class="py-2.5 rounded-xl bg-fintech-800 hover:bg-fintech-700 text-white font-bold border border-white/10 transition flex items-center justify-center gap-1.5 active:scale-95">
+          <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-cyan-400"></i> Retry Stripe Card
+        </button>
+        <button onclick="dispatchDunningEmail()" class="py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-amber-500 hover:opacity-90 text-white font-bold transition flex items-center justify-center gap-1.5 shadow-md shadow-rose-500/20 active:scale-95">
+          <i data-lucide="send" class="w-3.5 h-3.5"></i> Dispatch Dunning
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toast" class="fixed bottom-6 right-6 z-50 bg-fintech-900 border border-cyan-400 text-white px-5 py-3 rounded-2xl shadow-2xl font-mono text-xs flex items-center gap-3 transition-all duration-300 opacity-0 pointer-events-none translate-y-3">
+    <div class="w-6 h-6 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-400 shrink-0">
+      <i data-lucide="check" class="w-4 h-4"></i>
+    </div>
+    <span id="toastMsg" class="font-bold">Automated dunning sequence dispatched!</span>
+  </div>
+
+  <!-- COMPLETE APPLICATION SCRIPT -->
+  <script>
+    // State
+    let currentCurrency = 'USD';
+    const exchangeRate = 0.785;
+    let currentTenant = 'global';
+    let cohortMode = 'logo';
+    let webhookStreamActive = true;
+    let webhookTimer = null;
+    let liveTickerTimer = null;
+    let telemetryChartInstance = null;
+    let currentChartMetric = 'mrr';
+    let currentTourStep = 0;
+    let isDarkTheme = true;
+
+    // 1. Render Table From Centralized Mock Data
+    function renderAccountsTable() {
+      const tbody = document.getElementById('accountsTableBody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      window.PulseMockData.accounts.forEach(acct => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-white/[0.02] transition';
+        tr.setAttribute('data-region', acct.region);
+        tr.setAttribute('data-risk', acct.churnRisk > 10 ? 'high' : 'low');
+
+        const valFormatted = currentCurrency === 'USD' 
+          ? `$${acct.mrrUsd.toLocaleString()} / mo` 
+          : `£${acct.mrrGbp.toLocaleString()} / mo`;
+
+        tr.innerHTML = `
+          <td class="py-3.5 px-3.5 font-bold text-white whitespace-nowrap">
+            <div class="flex items-center gap-2.5">
+              <div class="w-7 h-7 rounded-lg shrink-0 ${acct.initialsColor} flex items-center justify-center text-xs font-bold">${acct.initials}</div>
+              <div>
+                <span class="block leading-tight text-white font-bold">${acct.name}</span>
+                <span class="text-[10px] text-slate-500 block font-normal leading-tight">${acct.domain}</span>
+              </div>
+            </div>
+          </td>
+          <td class="py-3.5 px-3.5 text-slate-300 whitespace-nowrap">${acct.location}</td>
+          <td class="py-3.5 px-3.5 whitespace-nowrap"><span class="px-2.5 py-1 rounded-md ${acct.tierBadge} font-semibold text-[10px]">${acct.plan}</span></td>
+          <td class="py-3.5 px-3.5 font-bold text-emerald-400 table-val whitespace-nowrap" data-usd="${acct.mrrUsd}" data-gbp="${acct.mrrGbp}">${valFormatted}</td>
+          <td class="py-3.5 px-3.5 whitespace-nowrap"><span class="text-emerald-400 font-bold">${acct.health} / 100</span> <span class="text-slate-400 text-[10px]">(${acct.healthComment})</span></td>
+          <td class="py-3.5 px-3.5 whitespace-nowrap"><span class="px-2 py-0.5 rounded ${acct.riskClass} text-[10px] font-bold">${acct.riskLabel}</span></td>
+          <td class="py-3.5 px-3.5 text-right whitespace-nowrap">
+            ${acct.churnRisk > 10 
+              ? `<button onclick="openDunningModal('${acct.name}', ${acct.mrrUsd}, '${acct.region}')" class="px-2.5 py-1 rounded-lg bg-rose-500/10 text-rose-300 hover:bg-rose-500/20 border border-rose-500/30 font-bold transition">Auto-Dunning -></button>`
+              : `<button onclick="inspectAccount('${acct.id}')" class="px-2.5 py-1 rounded-lg bg-cyan-500/10 text-cyan-300 hover:bg-cyan-500/20 border border-cyan-500/30 font-bold transition">Inspect -></button>`
+            }
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // 2. Live Ticking KPI Numbers (Wow Feature)
+    function startLiveTicker() {
+      let activeUsers = window.PulseMockData.kpis.usd.activeUsers;
+      let mrr = window.PulseMockData.kpis.usd.mrr;
+
+      liveTickerTimer = setInterval(() => {
+        // Natural micro-fluctuation (+1 or +2 active users)
+        const userDelta = Math.random() > 0.4 ? 1 : (Math.random() > 0.5 ? -1 : 2);
+        activeUsers += userDelta;
+        
+        const userEl = document.getElementById('metricActiveUsers');
+        if (userEl) {
+          userEl.textContent = activeUsers.toLocaleString();
+          userEl.classList.add('text-cyan-300');
+          setTimeout(() => userEl.classList.remove('text-cyan-300'), 600);
+        }
+      }, 4500);
+    }
+
+    // 3. AI Copilot Simulation
+    function askCopilot(promptKey) {
+      const data = window.PulseMockData.aiInsights[promptKey];
+      if (!data) return;
+
+      const answerEl = document.getElementById('aiAnswerText');
+      const timeEl = document.getElementById('aiTimestamp');
+
+      // Loading skeleton
+      answerEl.innerHTML = `
+        <span class="inline-flex items-center gap-2 text-cyan-400">
+          <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+          Synthesizing PostgreSQL ledger & Stripe telemetry...
+        </span>
+      `;
+      timeEl.textContent = 'Processing...';
+
+      setTimeout(() => {
+        answerEl.innerHTML = `<strong>${data.question}</strong><br><br>${data.answer}`;
+        timeEl.textContent = 'Analyzed at ' + new Date().toLocaleTimeString('en-US', { hour12: false });
+        showToast('PulseAI synthesized response!');
+      }, 700);
+    }
+
+    // 4. Guided Product Tour
+    function startGuidedTour() {
+      currentTourStep = 0;
+      showTourStep(0);
+      const overlay = document.getElementById('tourOverlay');
+      overlay.classList.remove('opacity-0', 'pointer-events-none');
+      overlay.classList.add('opacity-100');
+    }
+
+    function showTourStep(idx) {
+      const steps = window.PulseMockData.tourSteps;
+      const step = steps[idx];
+      
+      document.querySelectorAll('.tour-spotlight').forEach(el => el.classList.remove('tour-spotlight'));
+
+      const target = document.getElementById(step.targetId);
+      if (target) {
+        target.classList.add('tour-spotlight');
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+
+      document.getElementById('tourStepBadge').textContent = `Step ${idx + 1} of ${steps.length}`;
+      document.getElementById('tourStepTitle').textContent = step.title;
+      document.getElementById('tourStepDesc').textContent = step.description;
+
+      const card = document.getElementById('tourCard');
+      if (target) {
+        const rect = target.getBoundingClientRect();
+        card.style.top = Math.max(10, rect.top + window.scrollY - 10) + 'px';
+        card.style.left = Math.min(window.innerWidth - 380, Math.max(20, rect.left + 20)) + 'px';
+      }
+
+      document.getElementById('tourPrevBtn').style.display = idx === 0 ? 'none' : 'block';
+      document.getElementById('tourNextBtn').textContent = idx === steps.length - 1 ? 'Finish Tour' : 'Next ->';
+    }
+
+    function nextTourStep() {
+      if (currentTourStep < window.PulseMockData.tourSteps.length - 1) {
+        currentTourStep++;
+        showTourStep(currentTourStep);
+      } else {
+        endGuidedTour();
+      }
+    }
+
+    function prevTourStep() {
+      if (currentTourStep > 0) {
+        currentTourStep--;
+        showTourStep(currentTourStep);
+      }
+    }
+
+    function endGuidedTour() {
+      document.querySelectorAll('.tour-spotlight').forEach(el => el.classList.remove('tour-spotlight'));
+      const overlay = document.getElementById('tourOverlay');
+      overlay.classList.add('opacity-0', 'pointer-events-none');
+      overlay.classList.remove('opacity-100');
+      showToast('Product tour completed! Enjoy exploring PulseMetrics.');
+    }
+
+    // 5. Command Palette (Cmd+K)
+    function toggleCommandPalette() {
+      const modal = document.getElementById('cmdPaletteModal');
+      const isHidden = modal.classList.contains('opacity-0');
+      if (isHidden) {
+        modal.classList.remove('opacity-0', 'pointer-events-none');
+        modal.classList.add('opacity-100');
+        document.getElementById('cmdPaletteInput').focus();
+      } else {
+        modal.classList.add('opacity-0', 'pointer-events-none');
+        modal.classList.remove('opacity-100');
+      }
+    }
+
+    function filterPalette(val) {
+      const q = val.toLowerCase();
+      document.querySelectorAll('.palette-item').forEach(item => {
+        item.style.display = item.textContent.toLowerCase().includes(q) ? 'flex' : 'none';
+      });
+    }
+
+    function executePalette(action) {
+      toggleCommandPalette();
+      if (action === 'tour') startGuidedTour();
+      if (action === 'csv') exportSubscribersToCSV();
+      if (action === 'gbp') setCurrency('GBP');
+      if (action === 'usd') setCurrency('USD');
+      if (action === 'theme') toggleTheme();
+      if (action === 'webhook') triggerSimulatedWebhook();
+      if (action === 'oauth') openOAuthConnectModal('Stripe');
+    }
+
+    // Global Key Listener for Cmd+K and Escape
+    window.addEventListener('keydown', (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        toggleCommandPalette();
+      }
+      if (e.key === 'Escape') {
+        const cmdModal = document.getElementById('cmdPaletteModal');
+        if (cmdModal && !cmdModal.classList.contains('opacity-0')) toggleCommandPalette();
+        endGuidedTour();
+      }
+    });
+
+    // 6. Simulated OAuth Gateway Flow
+    function openOAuthConnectModal(name) {
+      document.getElementById('oauthModalTitle').textContent = `Connect ${name} Gateway`;
+      document.getElementById('oauthIdleState').classList.remove('hidden');
+      document.getElementById('oauthLoadingState').classList.add('hidden');
+      document.getElementById('oauthSuccessState').classList.add('hidden');
+      
+      const modal = document.getElementById('oauthModal');
+      modal.classList.remove('opacity-0', 'pointer-events-none');
+      modal.classList.add('opacity-100');
+    }
+
+    function closeOAuthModal() {
+      const modal = document.getElementById('oauthModal');
+      modal.classList.add('opacity-0', 'pointer-events-none');
+      modal.classList.remove('opacity-100');
+    }
+
+    function startSimulatedOAuth() {
+      document.getElementById('oauthIdleState').classList.add('hidden');
+      document.getElementById('oauthLoadingState').classList.remove('hidden');
+      
+      const msgEl = document.getElementById('oauthStatusMsg');
+      setTimeout(() => { msgEl.textContent = 'Verifying webhook secrets & idempotency tokens...'; }, 800);
+      setTimeout(() => { msgEl.textContent = 'Importing trailing 90-day transactions...'; }, 1600);
+      setTimeout(() => {
+        document.getElementById('oauthLoadingState').classList.add('hidden');
+        document.getElementById('oauthSuccessState').classList.remove('hidden');
+        showToast('OAuth 2.0 handshake verified successfully!');
+      }, 2400);
+    }
+
+    // 7. Theme Toggle (Dark vs Light Luxe)
+    function toggleTheme() {
+      isDarkTheme = !isDarkTheme;
+      if (isDarkTheme) {
+        document.body.classList.remove('theme-light');
+        document.body.classList.add('theme-dark');
+        showToast('Switched to Dark Mesh Fintech Theme');
+      } else {
+        document.body.classList.remove('theme-dark');
+        document.body.classList.add('theme-light');
+        showToast('Switched to Light Alabaster Luxury Theme');
+      }
+    }
+
+    // 8. Demo Login Modal
+    function openDemoLoginModal() {
+      const modal = document.getElementById('demoLoginModal');
+      modal.classList.remove('opacity-0', 'pointer-events-none');
+      modal.classList.add('opacity-100');
+    }
+    function closeDemoLoginModal() {
+      const modal = document.getElementById('demoLoginModal');
+      modal.classList.add('opacity-0', 'pointer-events-none');
+      modal.classList.remove('opacity-100');
+    }
+    function simulatedLoginSuccess() {
+      closeDemoLoginModal();
+      showToast('Authenticated as demo.executive@pulsemetrics.io');
+    }
+
+    function dismissBanner() {
+      const banner = document.getElementById('demoNoticeBanner');
+      if (banner) banner.style.display = 'none';
+    }
+
+    // 9. Existing Currency, Multi-Tenant, Chart, Webhook, and Modals
+    function setCurrency(curr) {
+      currentCurrency = curr;
+      const btnUSD = document.getElementById('btnUSD');
+      const btnGBP = document.getElementById('btnGBP');
+      const metricMRR = document.getElementById('metricMRR');
+      const metricARR = document.getElementById('metricARR');
+      const metricLTV = document.getElementById('metricLTV');
+      const metricCAC = document.getElementById('metricCAC');
+
+      const kpis = curr === 'USD' ? window.PulseMockData.kpis.usd : window.PulseMockData.kpis.gbp;
+
+      if (curr === 'USD') {
+        btnUSD.className = 'px-3 py-1.5 rounded-lg bg-cyan-500 text-slate-950 font-bold transition';
+        btnGBP.className = 'px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition';
+        metricMRR.textContent = '$' + kpis.mrr.toLocaleString();
+        metricARR.textContent = '$' + kpis.arr.toLocaleString();
+        metricLTV.textContent = '$' + kpis.ltv.toLocaleString() + ' LTV';
+        metricCAC.textContent = '$' + kpis.cac.toLocaleString() + ' Acquisition';
+      } else {
+        btnGBP.className = 'px-3 py-1.5 rounded-lg bg-cyan-500 text-slate-950 font-bold transition';
+        btnUSD.className = 'px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition';
+        metricMRR.textContent = '£' + kpis.mrr.toLocaleString();
+        metricARR.textContent = '£' + kpis.arr.toLocaleString();
+        metricLTV.textContent = '£' + kpis.ltv.toLocaleString() + ' LTV';
+        metricCAC.textContent = '£' + kpis.cac.toLocaleString() + ' Acquisition';
+      }
+
+      renderAccountsTable();
+      showToast(`Currency converted to ${curr === 'USD' ? 'US Dollar ($)' : 'British Pound (£)'}`);
+    }
+
+    function updateTimeframe(val) {
+      const series = window.PulseMockData.timeframes[val] || window.PulseMockData.timeframes['30d'];
+      revenueChart.data.labels = series.labels;
+      if (currentChartMetric === 'mrr') revenueChart.data.datasets[0].data = series.mrr;
+      if (currentChartMetric === 'churn') revenueChart.data.datasets[0].data = series.churn;
+      if (currentChartMetric === 'arpu') revenueChart.data.datasets[0].data = series.arpu;
+      revenueChart.update();
+      showToast(`Telemetry range adjusted to: ${val.toUpperCase()}`);
+    }
+
+    // Chart.js Setup
+    const ctx = document.getElementById('revenueChart').getContext('2d');
+    const initSeries = window.PulseMockData.timeframes['90d'];
+    const revenueChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: initSeries.labels,
+        datasets: [{
+          label: 'Monthly Recurring Revenue ($)',
+          data: initSeries.mrr,
+          borderColor: '#06b6d4',
+          backgroundColor: 'rgba(6, 182, 212, 0.12)',
+          borderWidth: 3,
+          fill: true,
+          tension: 0.35,
+          pointBackgroundColor: '#22d3ee',
+          pointRadius: 4,
+          pointHoverRadius: 6,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#0b1124',
+            borderColor: 'rgba(255,255,255,0.1)',
+            borderWidth: 1,
+            titleFont: { family: 'Plus Jakarta Sans', size: 12 },
+            bodyFont: { family: 'JetBrains Mono', size: 12 },
+            padding: 12,
+            displayColors: false,
+          }
+        },
+        scales: {
+          x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8', font: { family: 'JetBrains Mono', size: 11 } } },
+          y: { 
+            grid: { color: 'rgba(255, 255, 255, 0.05)' }, 
+            ticks: { 
+              color: '#94a3b8', 
+              font: { family: 'JetBrains Mono', size: 11 },
+              callback: function(val) { return '$' + (val / 1000) + 'k'; }
+            } 
+          }
+        }
+      }
+    });
+
+    function switchChartMetric(type) {
+      currentChartMetric = type;
+      const btnMRR = document.getElementById('chartBtnMRR');
+      const btnChurn = document.getElementById('chartBtnChurn');
+      const btnARPU = document.getElementById('chartBtnARPU');
+      const tf = document.getElementById('timeframeSelect').value;
+      const series = window.PulseMockData.timeframes[tf] || window.PulseMockData.timeframes['90d'];
+
+      [btnMRR, btnChurn, btnARPU].forEach(b => {
+        b.className = 'px-3 py-1.5 rounded-lg bg-fintech-900 text-slate-400 hover:text-white border border-white/5 transition';
+      });
+
+      if (type === 'mrr') {
+        btnMRR.className = 'px-3 py-1.5 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold transition';
+        revenueChart.data.datasets[0].label = 'MRR ($)';
+        revenueChart.data.datasets[0].data = series.mrr;
+        revenueChart.data.datasets[0].borderColor = '#06b6d4';
+        revenueChart.data.datasets[0].backgroundColor = 'rgba(6, 182, 212, 0.12)';
+        revenueChart.options.scales.y.ticks.callback = function(val) { return '$' + (val / 1000) + 'k'; };
+      } else if (type === 'churn') {
+        btnChurn.className = 'px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold transition';
+        revenueChart.data.datasets[0].label = 'Net Logo Churn (%)';
+        revenueChart.data.datasets[0].data = series.churn;
+        revenueChart.data.datasets[0].borderColor = '#10b981';
+        revenueChart.data.datasets[0].backgroundColor = 'rgba(16, 185, 129, 0.12)';
+        revenueChart.options.scales.y.ticks.callback = function(val) { return val + '%'; };
+      } else if (type === 'arpu') {
+        btnARPU.className = 'px-3 py-1.5 rounded-lg bg-violet-500/20 text-violet-300 border border-violet-500/40 font-bold transition';
+        revenueChart.data.datasets[0].label = 'Average Revenue Per User ($)';
+        revenueChart.data.datasets[0].data = series.arpu;
+        revenueChart.data.datasets[0].borderColor = '#8b5cf6';
+        revenueChart.data.datasets[0].backgroundColor = 'rgba(139, 92, 246, 0.12)';
+        revenueChart.options.scales.y.ticks.callback = function(val) { return '$' + val; };
+      }
+      revenueChart.update();
+    }
+
+    // Cohort Matrix
+    function renderCohortMatrix() {
+      const tbody = document.getElementById('cohortTableBody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      window.PulseMockData.cohorts.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-white/[0.02] transition';
+
+        let cellsHtml = `
+          <td class="py-3 px-3 text-left font-bold text-white whitespace-nowrap">${row.cohort}</td>
+          <td class="py-3 px-3 text-slate-400 whitespace-nowrap">${row.size}</td>
+        `;
+
+        const dataSeries = cohortMode === 'logo' ? row.logo : row.ndr;
+        dataSeries.forEach((val, idx) => {
+          if (val === null) {
+            cellsHtml += `<td class="py-3 px-3 text-slate-700 font-mono whitespace-nowrap">—</td>`;
+          } else {
+            const colorClass = val >= 95 ? 'bg-emerald-500/25 text-emerald-300 border border-emerald-500/30' : (val >= 90 ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30');
+            cellsHtml += `
+              <td class="py-3 px-3 whitespace-nowrap">
+                <span onclick="showToast('Cohort ${row.cohort} Month ${idx}: ${val}% retention')" class="inline-block px-2.5 py-1.5 rounded-lg ${colorClass} font-bold text-[11px] whitespace-nowrap transition hover:scale-105 cursor-pointer">
+                  ${val}%
+                </span>
+              </td>
+            `;
+          }
+        });
+        tr.innerHTML = cellsHtml;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function setCohortMode(mode) {
+      cohortMode = mode;
+      const btnLogo = document.getElementById('btnCohortLogo');
+      const btnNDR = document.getElementById('btnCohortNDR');
+      if (mode === 'logo') {
+        btnLogo.className = 'px-3 py-1.5 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold transition';
+        btnNDR.className = 'px-3 py-1.5 rounded-lg bg-fintech-900 text-slate-400 hover:text-white border border-white/5 transition';
+      } else {
+        btnNDR.className = 'px-3 py-1.5 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold transition';
+        btnLogo.className = 'px-3 py-1.5 rounded-lg bg-fintech-900 text-slate-400 hover:text-white border border-white/5 transition';
+      }
+      renderCohortMatrix();
+    }
+
+    // Webhooks
+    const webhookEventTemplates = [
+      { event: 'invoice.payment_succeeded', badge: 'bg-emerald-500/20 text-emerald-400', desc: 'Charged $2,400.00 for CloudScale Systems (US ACH)' },
+      { event: 'customer.subscription.updated', badge: 'bg-cyan-500/20 text-cyan-400', desc: 'Apex Retail Logic expanded +5 Enterprise seats' },
+      { event: 'charge.failed', badge: 'bg-rose-500/20 text-rose-400', desc: 'Card declined (insufficient_funds) on VeloMed Health LLC' },
+      { event: 'customer.subscription.created', badge: 'bg-violet-500/20 text-violet-400', desc: 'New trial initiated by Kensington Analytics (London, UK)' },
+      { event: 'payout.paid', badge: 'bg-emerald-500/20 text-emerald-400', desc: 'Batch payout £48,290.00 dispatched to Barclays Bank PLC' }
+    ];
+
+    function triggerSimulatedWebhook() {
+      const feed = document.getElementById('webhookFeed');
+      if (!feed) return;
+      const item = webhookEventTemplates[Math.floor(Math.random() * webhookEventTemplates.length)];
+      const time = new Date().toLocaleTimeString('en-US', { hour12: false });
+      const row = document.createElement('div');
+      row.className = 'p-2.5 rounded-xl bg-fintech-950 border border-white/5 flex items-center justify-between transition-all duration-300';
+      row.innerHTML = `
+        <div class="flex items-center gap-2.5 truncate">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0"></span>
+          <span class="px-2 py-0.5 rounded text-[10px] font-bold ${item.badge}">${item.event}</span>
+          <span class="text-slate-300 truncate text-[11px]">${item.desc}</span>
+        </div>
+        <div class="text-[10px] text-slate-500 shrink-0 ml-2 font-mono flex items-center gap-1.5">
+          <span class="text-emerald-400">200 OK</span>
+          <span>${time}</span>
+        </div>
+      `;
+      feed.prepend(row);
+      if (feed.children.length > 7) feed.lastElementChild.remove();
+    }
+
+    function toggleWebhookAutoStream() {
+      const btn = document.getElementById('webhookPauseBtn');
+      webhookStreamActive = !webhookStreamActive;
+      if (webhookStreamActive) {
+        btn.innerHTML = `<i data-lucide="pause" class="w-3.5 h-3.5"></i> Pause Feed`;
+        startWebhookStream();
+        showToast('Real-time webhook ingestion resumed.');
+      } else {
+        btn.innerHTML = `<i data-lucide="play" class="w-3.5 h-3.5"></i> Resume Feed`;
+        clearInterval(webhookTimer);
+        showToast('Stripe webhook simulator paused.');
+      }
+      lucide.createIcons();
+    }
+
+    function startWebhookStream() {
+      clearInterval(webhookTimer);
+      webhookTimer = setInterval(() => {
+        if (webhookStreamActive) triggerSimulatedWebhook();
+      }, 4800);
+    }
+
+    function clearWebhookFeed() {
+      const feed = document.getElementById('webhookFeed');
+      if (feed) feed.innerHTML = '';
+      showToast('Webhook event log cleared.');
+    }
+
+    // CSV Export
+    function exportSubscribersToCSV() {
+      const rows = document.querySelectorAll('#accountsTableBody tr');
+      if (!rows || rows.length === 0) return showToast('No records available.');
+      let csv = 'Subscriber Company,HQ Location,Subscription Tier,Monthly Revenue (USD),Health Score,Churn Risk\r\n';
+      rows.forEach(r => {
+        const c = r.querySelectorAll('td');
+        if (c.length >= 6) {
+          const comp = c[0].querySelector('span') ? c[0].querySelector('span').textContent.trim() : c[0].textContent.trim();
+          csv += `"${comp}","${c[1].textContent.trim()}","${c[2].textContent.trim()}","${c[3].getAttribute('data-usd')}","${c[4].textContent.trim()}","${c[5].textContent.trim()}"\r\n`;
+        }
+      });
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `pulsemetrics_subscribers_${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      showToast('Downloaded subscribers CSV!');
+    }
+
+    // Filter Accounts
+    function filterAccounts(q) {
+      const query = q.toLowerCase();
+      document.querySelectorAll('#accountsTableBody tr').forEach(row => {
+        row.style.display = row.textContent.toLowerCase().includes(query) ? '' : 'none';
+      });
+    }
+
+    function filterTableByRegion(type) {
+      const pAll = document.getElementById('pillAll');
+      const pUS = document.getElementById('pillUS');
+      const pUK = document.getElementById('pillUK');
+      const pRisk = document.getElementById('pillRisk');
+
+      [pAll, pUS, pUK, pRisk].forEach(p => {
+        p.className = 'px-3 py-1 rounded-lg bg-fintech-900 text-slate-400 hover:text-white border border-white/5';
+      });
+
+      if (type === 'all') pAll.className = 'px-3 py-1 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold';
+      if (type === 'US') pUS.className = 'px-3 py-1 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold';
+      if (type === 'UK') pUK.className = 'px-3 py-1 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold';
+      if (type === 'risk') pRisk.className = 'px-3 py-1 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold';
+
+      document.querySelectorAll('#accountsTableBody tr').forEach(row => {
+        const reg = row.getAttribute('data-region');
+        const risk = row.getAttribute('data-risk');
+        if (type === 'all') row.style.display = '';
+        else if (type === 'US') row.style.display = reg === 'US' ? '' : 'none';
+        else if (type === 'UK') row.style.display = reg === 'UK' ? '' : 'none';
+        else if (type === 'risk') row.style.display = risk === 'high' ? '' : 'none';
+      });
+    }
+
+    // Account Inspection
+    function inspectAccount(id) {
+      const acct = window.PulseMockData.accounts.find(a => a.id === id) || window.PulseMockData.accounts[0];
+      document.getElementById('modalCompInitials').textContent = acct.initials;
+      document.getElementById('modalCompName').textContent = acct.name;
+      document.getElementById('modalCompDomain').textContent = acct.domain;
+      document.getElementById('modalCompLocation').textContent = acct.location;
+      document.getElementById('modalStripeCustId').textContent = acct.stripeId;
+      document.getElementById('modalMRR').textContent = currentCurrency === 'USD' ? `$${acct.mrrUsd} / mo` : `£${acct.mrrGbp} / mo`;
+      document.getElementById('modalBillingCycle').textContent = acct.billing;
+      document.getElementById('modalSeats').textContent = acct.seats;
+      document.getElementById('modalSeatProgress').style.width = acct.seatPct + '%';
+      document.getElementById('modalHealth').textContent = acct.health + ' / 100';
+      document.getElementById('modalGateway').textContent = acct.gateway;
+      document.getElementById('modalRenewalDate').textContent = acct.renewal;
+      document.getElementById('modalApiVolume').textContent = acct.apiVolume;
+      document.getElementById('modalLatency').textContent = acct.latency;
+      document.getElementById('modalErrRate').textContent = acct.errRate;
+
+      renderSparkline(acct.sparkline);
+      const modal = document.getElementById('accountTelemetryModal');
+      modal.classList.remove('opacity-0', 'pointer-events-none');
+      modal.classList.add('opacity-100');
+      lucide.createIcons();
+    }
+
+    function closeTelemetryModal() {
+      const modal = document.getElementById('accountTelemetryModal');
+      modal.classList.add('opacity-0', 'pointer-events-none');
+      modal.classList.remove('opacity-100');
+    }
+
+    function renderSparkline(pts) {
+      const c = document.getElementById('telemetrySparkline');
+      if (!c) return;
+      if (telemetryChartInstance) telemetryChartInstance.destroy();
+      telemetryChartInstance = new Chart(c.getContext('2d'), {
+        type: 'line',
+        data: {
+          labels: ['D-6', 'D-5', 'D-4', 'D-3', 'D-2', 'Yesterday', 'Today'],
+          datasets: [{
+            data: pts,
+            borderColor: '#06b6d4',
+            backgroundColor: 'rgba(6, 182, 212, 0.15)',
+            borderWidth: 2.5,
+            fill: true,
+            tension: 0.4,
+            pointRadius: 3,
+            pointBackgroundColor: '#22d3ee'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b', font: { size: 10 } } },
+            y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b', font: { size: 10 } } }
+          }
+        }
+      });
+    }
+
+    function simulateStripePortalSync() {
+      showToast('Opening verified Stripe Billing Customer Portal session...');
+    }
+
+    // Dunning Modal
+    let activeDunningComp = '';
+    let activeDunningAmount = 1200;
+    function openDunningModal(comp, amt, reg) {
+      activeDunningComp = comp;
+      activeDunningAmount = amt;
+      document.getElementById('dunningCompName').textContent = comp;
+      document.getElementById('dunningAmount').textContent = reg === 'UK' ? `£${amt}` : `$${amt}`;
+      setDunningTemplate(reg);
+      const modal = document.getElementById('dunningModal');
+      modal.classList.remove('opacity-0', 'pointer-events-none');
+      modal.classList.add('opacity-100');
+      lucide.createIcons();
+    }
+    function closeDunningModal() {
+      const modal = document.getElementById('dunningModal');
+      modal.classList.add('opacity-0', 'pointer-events-none');
+      modal.classList.remove('opacity-100');
+    }
+    function setDunningTemplate(reg) {
+      const btnUS = document.getElementById('btnDunningUS');
+      const btnUK = document.getElementById('btnDunningUK');
+      const s = document.getElementById('dunningSubject');
+      const b = document.getElementById('dunningBody');
+      if (reg === 'US') {
+        btnUS.className = 'p-2.5 rounded-xl bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold text-left transition';
+        btnUK.className = 'p-2.5 rounded-xl bg-fintech-950 text-slate-400 border border-white/5 font-bold text-left transition hover:text-white';
+        s.value = `Urgent: Action required on invoice payment for ${activeDunningComp}`;
+        b.value = `Hi Finance Team,\n\nOur billing gateway was unable to process invoice ($${activeDunningAmount}) for ${activeDunningComp}.\n\nPlease update your ACH routing or card via our 256-bit secure link:\nhttps://billing.pulsemetrics.io/p/pay_secure\n\nPulseMetrics US Accounts`;
+      } else {
+        btnUK.className = 'p-2.5 rounded-xl bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold text-left transition';
+        btnUS.className = 'p-2.5 rounded-xl bg-fintech-950 text-slate-400 border border-white/5 font-bold text-left transition hover:text-white';
+        s.value = `Overdue Notice: Subscription Invoice for ${activeDunningComp} (UK VAT Reg.)`;
+        b.value = `Dear Finance Director,\n\nFormally notifying overdue invoice (£${activeDunningAmount}) for ${activeDunningComp}.\n\nPlease update credentials within 7 business days pursuant to BACS Direct rules.\n\nPulseMetrics UK Operations`;
+      }
+    }
+    function triggerImmediateStripeRetry() {
+      showToast('Stripe Smart-Retry triggered! Idempotency key verified.');
+      setTimeout(closeDunningModal, 1000);
+    }
+    function dispatchDunningEmail() {
+      showToast(`Dunning recovery notice successfully dispatched to ${activeDunningComp}!`);
+      closeDunningModal();
+    }
+
+    // Add New Customer Modal
+    function openNewCustomerModal() {
+      const m = document.getElementById('newCustomerModal');
+      m.classList.remove('opacity-0', 'pointer-events-none');
+      m.classList.add('opacity-100');
+    }
+    function closeNewCustomerModal() {
+      const m = document.getElementById('newCustomerModal');
+      m.classList.add('opacity-0', 'pointer-events-none');
+      m.classList.remove('opacity-100');
+    }
+    function handleNewCustomerSubmit(e) {
+      e.preventDefault();
+      const name = document.getElementById('custName').value;
+      const loc = document.getElementById('custLoc').value;
+      const tier = document.getElementById('custTier').value;
+      const mrr = document.getElementById('custMRR').value;
+      const gbp = Math.round(mrr * exchangeRate);
+
+      const tbody = document.getElementById('accountsTableBody');
+      const row = document.createElement('tr');
+      row.className = 'hover:bg-white/[0.02] transition bg-cyan-500/5';
+      row.setAttribute('data-region', loc.includes('UK') ? 'UK' : 'US');
+      row.setAttribute('data-risk', 'low');
+      row.innerHTML = `
+        <td class="py-3.5 font-bold text-white flex items-center gap-2">
+          <div class="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs font-bold">NEW</div>
+          <div><span>${name}</span><span class="text-[10px] text-slate-500 block font-normal">Active Contract</span></div>
+        </td>
+        <td class="py-3.5 text-slate-300">${loc}</td>
+        <td class="py-3.5"><span class="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-semibold text-[10px]">${tier}</span></td>
+        <td class="py-3.5 font-bold text-emerald-400 table-val" data-usd="${mrr}" data-gbp="${gbp}">$${Number(mrr).toLocaleString()} / mo</td>
+        <td class="py-3.5"><span class="text-emerald-400 font-bold">100 / 100</span> (New Signup)</td>
+        <td class="py-3.5"><span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px] font-bold">0.0% Optimal</span></td>
+        <td class="py-3.5 text-right"><span class="text-emerald-400 text-[10px] font-bold">Active</span></td>
+      `;
+      tbody.prepend(row);
+      closeNewCustomerModal();
+      showToast(`Subscription added for ${name}!`);
+    }
+
+    // Tenant Switcher
+    function toggleTenantDropdown() {
+      const dd = document.getElementById('tenantDropdown');
+      dd.classList.toggle('hidden');
+      document.getElementById('tenantCaret').classList.toggle('rotate-180');
+    }
+    function switchTenant(key) {
+      currentTenant = key;
+      const label = document.getElementById('currentTenantLabel');
+      if (key === 'global') label.innerHTML = `<i data-lucide="building-2" class="w-3.5 h-3.5 text-cyan-400"></i> <span>Acme Global (US & UK)</span>`;
+      if (key === 'us') label.innerHTML = `<i data-lucide="building-2" class="w-3.5 h-3.5 text-emerald-400"></i> <span>Acme Cloud US LLC</span>`;
+      if (key === 'uk') label.innerHTML = `<i data-lucide="building-2" class="w-3.5 h-3.5 text-violet-400"></i> <span>Acme FinTech UK Ltd</span>`;
+      toggleTenantDropdown();
+      lucide.createIcons();
+      showToast('Switched tenant workspace context.');
+    }
+
+    // Notifications Center
+    function toggleNotificationsDropdown() {
+      document.getElementById('notificationsDropdown').classList.toggle('hidden');
+    }
+    function markAllNotificationsRead() {
+      document.getElementById('notifList').innerHTML = `<div class="p-6 text-center text-slate-400">All alerts cleared.</div>`;
+      document.getElementById('notifBadge').classList.add('hidden');
+      document.getElementById('unreadCountBadge').textContent = '0 unread';
+      showToast('Notifications acknowledged.');
+    }
+
+    // Utility Toasts
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      document.getElementById('toastMsg').textContent = msg;
+      t.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-3');
+      t.classList.add('opacity-100', 'translate-y-0');
+      setTimeout(() => {
+        t.classList.add('opacity-0', 'pointer-events-none', 'translate-y-3');
+        t.classList.remove('opacity-100', 'translate-y-0');
+      }, 3500);
+    }
+
+    function toggleMobileMenu() {
+      const sidebar = document.getElementById('sidebar');
+      const backdrop = document.getElementById('sidebarBackdrop');
+      if (sidebar.classList.contains('hidden')) {
+        sidebar.classList.remove('hidden');
+        backdrop?.classList.remove('hidden');
+      } else {
+        sidebar.classList.add('hidden');
+        backdrop?.classList.add('hidden');
+      }
+    }
+
+    function highlightNav(el) {
+      document.querySelectorAll('.nav-item').forEach(i => {
+        i.className = 'nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-300 hover:bg-white/5 hover:text-white transition';
+      });
+      el.className = 'nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 font-bold transition';
+      if (window.innerWidth < 768) {
+        document.getElementById('sidebar').classList.add('hidden');
+        document.getElementById('sidebarBackdrop')?.classList.add('hidden');
+      }
+    }
+
+    // Init
+    document.addEventListener('DOMContentLoaded', () => {
+      renderAccountsTable();
+      renderCohortMatrix();
+      startWebhookStream();
+      startLiveTicker();
+      triggerSimulatedWebhook();
+      triggerSimulatedWebhook();
+      lucide.createIcons();
+    });
+    renderAccountsTable();
+    renderCohortMatrix();
+    startWebhookStream();
+    startLiveTicker();
+    triggerSimulatedWebhook();
+    triggerSimulatedWebhook();
+    lucide.createIcons();
+  </script>
+</body>
+</html>
