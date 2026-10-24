@@ -170,7 +170,7 @@
   <div class="h-8 w-full md:hidden"></div>
 
   <!-- MOBILE TOP BAR -->
-  <header class="md:hidden flex items-center justify-between p-4 bg-fintech-900 border-b border-white/10 sticky top-8 z-40">
+  <header class="md:hidden flex items-center justify-between p-4 bg-fintech-900/95 backdrop-blur-md border-b border-white/10 fixed top-8 left-0 right-0 z-40">
     <div class="flex items-center gap-2.5">
       <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-cyan-500 to-emerald-400 p-[1.5px] flex items-center justify-center">
         <div class="w-full h-full bg-fintech-950 rounded-[10px] flex items-center justify-center font-mono font-bold text-cyan-400 text-xs">PM</div>
@@ -184,11 +184,13 @@
       <button onclick="toggleTheme()" class="p-2 rounded-lg bg-fintech-800 text-slate-300 border border-white/10">
         <i data-lucide="sun-moon" class="w-4 h-4"></i>
       </button>
-      <button onclick="toggleMobileMenu()" class="p-2 rounded-lg bg-fintech-800 text-slate-300 border border-white/10">
+      <button onclick="toggleMobileMenu()" class="p-2 rounded-lg bg-fintech-800 text-slate-300 border border-white/10" aria-label="Open navigation menu">
         <i data-lucide="menu" class="w-5 h-5"></i>
       </button>
     </div>
   </header>
+
+  <div class="h-14 w-full md:hidden"></div>
 
   <!-- MOBILE BACKDROP OVERLAY -->
   <div id="sidebarBackdrop" onclick="toggleMobileMenu()" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden md:hidden"></div>
@@ -1947,5 +1949,11 @@
     triggerSimulatedWebhook();
     lucide.createIcons();
   </script>
+
+  <!-- FLOATING BACK TO TOP BUTTON -->
+  <button id="floatingBackToTop" onclick="window.scrollTo({top: 0, left: 0, behavior: 'smooth'})" class="fixed bottom-6 right-6 z-50 px-4 py-2.5 rounded-full bg-gradient-to-r from-cyan-400 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 text-slate-950 font-bold shadow-2xl flex items-center gap-2 text-xs transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer border border-cyan-200/50">
+    <i data-lucide="arrow-up" class="w-4 h-4 text-slate-950"></i>
+    <span class="font-mono font-black">Top ↑</span>
+  </button>
 </body>
 </html>
