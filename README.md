@@ -1,100 +1,119 @@
-# PulseMetrics — B2B SaaS Revenue & Churn Intelligence Platform
+# PulseMetrics — SaaS Revenue Telemetry Demo & RLS Architecture Reference
 
 [![Live Demo](https://img.shields.io/badge/Demo-pulsemetrics--demo.vercel.app-06b6d4?style=for-the-badge&logo=vercel&logoColor=white)](https://pulsemetrics-demo.vercel.app)
-[![Architecture](https://img.shields.io/badge/Architecture-Multi--Tenant%20SaaS-8b5cf6?style=for-the-badge)](https://pulsemetrics-demo.vercel.app)
-[![Security](https://img.shields.io/badge/Security-PostgreSQL%20RLS%20Isolated-10b981?style=for-the-badge&logo=postgresql&logoColor=white)](https://pulsemetrics-demo.vercel.app)
-[![TypeScript / Next.js](https://img.shields.io/badge/Stack-Next.js%20%7C%20TypeScript%20%7C%20Tailwind-000000?style=for-the-badge&logo=next.js&logoColor=white)](https://pulsemetrics-demo.vercel.app)
+[![Architecture](https://img.shields.io/badge/Architecture-Reference%20Design-8b5cf6?style=for-the-badge)](https://pulsemetrics-demo.vercel.app)
+[![Security](https://img.shields.io/badge/Security-PostgreSQL%20RLS%20Schema-10b981?style=for-the-badge&logo=postgresql&logoColor=white)](https://pulsemetrics-demo.vercel.app)
+[![Stack](https://img.shields.io/badge/Stack-HTML5%20%7C%20Tailwind%20%7C%20Vanilla%20JS-38bdf8?style=for-the-badge)](https://pulsemetrics-demo.vercel.app)
 
-An enterprise-grade subscription telemetry and revenue intelligence workspace designed for modern B2B SaaS companies. PulseMetrics transforms raw billing events and Stripe lifecycle webhooks into real-time operational metrics—including Net MRR, ARR run-rate, cohort retention heatmaps, customer churn velocity, and expansion revenue attribution.
-
----
-
-## ⚡ Key Highlights & Production Capabilities
-
-- **Real-Time Financial Telemetry:** Sub-second recalculation of Net New MRR, Expansion MRR, Contraction MRR, and Gross Churn.
-- **Cohort Retention Matrix:** Visual cohort analysis mapping customer retention across 12-month lifecycle curves.
-- **Stripe Webhook Event Pipeline:** Resilient idempotency key processing for `invoice.payment_succeeded`, `customer.subscription.updated`, and chargeback triggers.
-- **Multi-Tenant Tenant Isolation:** Designed for multi-organization SaaS architecture with Row-Level Security (RLS) enforcement at the database layer.
-- **Predictive Churn Scoring:** Behavioral indicators that flag high-risk accounts prior to subscription renewal dates.
-- **Enterprise Dark/Light FinTech UI:** Ergonomic, high-density dashboard engineered with Tailwind CSS, Chart.js, and Lucide telemetry icons.
+> **Project Notice:** PulseMetrics is a reference and demonstration project. The live web application is a static client-side dashboard powered by structured mock data (`data/mockData.js`). The repository also provides a reference implementation of a multi-tenant PostgreSQL Row-Level Security (RLS) schema migration and accompanying verification test scripts.
 
 ---
 
-## 🏗️ System Architecture
+## 📌 Project Scope: What Is and Is Not Implemented
+
+### What Is Implemented
+- **Interactive Telemetry Dashboard (Client-Side):** A responsive UI displaying MRR, ARR, churn, and cohort retention curves using Tailwind CSS and Chart.js.
+- **Reference PostgreSQL RLS Migration (`supabase/migrations/`):** A standalone SQL migration defining multi-tenant tables (`organizations`, `tenant_memberships`, `subscriptions`, `revenue_events`) with Row-Level Security enabled.
+- **Optimized Tenant Lookup Function:** A `STABLE` function (`current_user_org_id()`) that resolves tenant scope from `auth.jwt() -> 'app_metadata' ->> 'org_id'` with a fallback to `tenant_memberships`.
+- **Compound Idempotency Constraint:** Scoped unique constraint `(org_id, idempotency_key)` on `revenue_events` to prevent cross-tenant key enumeration.
+- **Database Security Test Suite (`supabase/tests/database/`):** A pgTAP-compatible SQL test script asserting tenant isolation, cross-tenant mutation blocks, and role permissions.
+- **In-Memory Mock Test (`tests/unit/`):** A lightweight Vitest unit test exercising an in-memory client mock.
+
+### What Is NOT Implemented (UI Mockup Only)
+- **Live Stripe Webhook Ingestion:** No live Stripe API keys or active webhook listeners are running. Webhook pipeline diagrams represent the intended backend design.
+- **Dynamic Database Connection in Dashboard:** The browser dashboard runs entirely on static seed data (`mockData.js`) and does not establish live connections to a Supabase or PostgreSQL instance.
+- **Predictive ML Churn Models:** Churn risk flags in the UI are pre-calculated demo values.
+
+---
+
+## 🏗️ Multi-Tenant RLS Architecture
 
 ```
-                    +------------------------------------+
-                    |        Stripe Webhook Rails        |
-                    | (invoice.paid, sub.deleted, etc.)  |
-                    +-----------------+------------------+
-                                      |
-                                      v
-+-----------------------+     +--------------------------+
-|   Client Application  | <-> |  Event Ingestion Pipeline|
-|  (PulseMetrics UI)    |     |   (Idempotency & Queues) |
-+-----------+-----------+     +------------+-------------+
-            |                              |
-            v                              v
-+-----------------------+     +--------------------------+
-|  Analytics Aggregator | <-> |   PostgreSQL + RLS       |
-|  (MRR/ARR/Cohort Engine)    | (Tenant-Isolated Tables) |
-+-----------------------+     +--------------------------+
+                  Client Request with Supabase Auth JWT
+                                    │
+                                    ▼
+       ┌────────────────────────────────────────────────────────┐
+       │             PostgreSQL Query Planner                   │
+       │                                                        │
+       │  InitPlan: (SELECT public.current_user_org_id())       │
+       │    1. Inspects auth.jwt() -> 'app_metadata' ->> 'org_id'│
+       │    2. Fallback: tenant_memberships (earliest membership)│
+       └────────────────────────────┬───────────────────────────┘
+                                    │
+                    Evaluated Once per Statement
+                                    │
+                                    ▼
+         ┌─────────────────────────────────────────────────────┐
+         │             Row-Level Security Policies             │
+         │                                                     │
+         │  USING (org_id = InitPlan)                          │
+         │  WITH CHECK (org_id = InitPlan)                     │
+         └──────────────────────────┬──────────────────────────┘
+                                    │
+                                    ▼
+         ┌─────────────────────────────────────────────────────┐
+         │              Table Data (Index Scan)                │
+         │                                                     │
+         │  idx_subscriptions_org_id (B-tree on org_id)        │
+         └─────────────────────────────────────────────────────┘
 ```
 
-### 1. Data Ingestion & Webhook Reliability
-- Employs strict idempotency keys to prevent double-counting of duplicate Stripe webhook payloads.
-- Background worker synchronization ensures metrics reflect real-time subscription lifecycle modifications without blocking client response times.
-
-### 2. Multi-Tenant Data Isolation
-- Enforces strict tenant separation via PostgreSQL Row-Level Security (RLS) policies.
-- Every read and write transaction is bounded by `org_id` claims extracted directly from signed authentication JWTs (`auth.jwt() -> app_metadata`).
-- Features a high-speed `STABLE` lookup function (`current_user_org_id()`) optimized with query-plan caching (`InitPlan`).
-- Includes compound unique constraints (`org_id, idempotency_key`) to eliminate cross-tenant key enumeration risks.
+### Architectural Decisions
+1. **`STABLE` Function & InitPlan:** Marking `current_user_org_id()` as `STABLE` informs PostgreSQL that its return value remains constant throughout a single query execution. Calling it as `(SELECT public.current_user_org_id())` in policies allows the planner to execute it as an InitPlan (once per statement), rather than re-evaluating it for each scanned row.
+2. **Schema Qualification:** The function specifies `SET search_path = public, pg_temp` to prevent search-path hijacking under `SECURITY DEFINER`.
+3. **Compound Unique Keys:** Webhook idempotency keys are constrained by `UNIQUE (org_id, idempotency_key)`, ensuring tenant isolation in asynchronous ingestion ledgers.
 
 ---
 
-## 📊 Modules & Functional Overview
+## 🧪 How to Run Tests
 
-### 1. Executive Revenue Health Deck
-- **MRR Velocity:** Real-time breakdown of New, Expansion, Contraction, and Churned MRR.
-- **ARR Projections:** Forward-looking annual run-rate models factoring in annualized churn rates and net retention.
-- **ARPU & LTV:** Live calculation of Average Revenue Per User and Customer Lifetime Value benchmarks.
+### 1. Database RLS Test Suite (pgTAP)
+The database test suite requires Docker and the Supabase CLI:
 
-### 2. Churn Prevention & Cohort Retention
-- Dynamic heatmap tracking month-over-month cohort retention down to individual customer cohorts.
-- Pre-churn signals: Declining usage frequency, failed recurring billing attempts, and inactive seat licenses.
-
-### 3. Customer Billing Ledger & Subscription Drilldown
-- High-density table displaying customer-level tier, renewal cycle, MRR contribution, and status indicators.
-- Instant search, status filtering (Active, Past Due, Churned), and CSV export capabilities.
-
----
-
-## 🚀 Quick Start (Local Development)
-
-### Prerequisites
-- Modern web browser or local static server (Node.js 18+ recommended)
-
-### 1. Clone the Repository
 ```bash
-git clone https://github.com/sohailrasheedd/pulsemetrics-saas.git
-cd pulsemetrics-saas
+# Start local Supabase container stack
+supabase start
+
+# Execute the pgTAP RLS policy test suite
+supabase test db
 ```
 
-### 2. Run Locally
-You can run this project using any local web server or directly open `index.html`:
+*Note: If running in an environment without Docker or Supabase CLI, this test cannot be executed locally.*
 
-**Using `npx serve`:**
+### 2. In-Memory Mock Test (Vitest)
+A unit test exercising client-side mock guard logic can be executed via Node.js:
+
 ```bash
+# Install dependencies
+npm install
+
+# Run unit tests
+npm test
+```
+
+---
+
+## ⚠️ Known Limitations
+
+1. **Multi-Organization Users:** If a user belongs to multiple organizations and does not have an explicit `org_id` claim inside `auth.jwt() -> app_metadata`, the fallback query resolves to their earliest membership (`ORDER BY created_at ASC LIMIT 1`). In multi-tenant applications with account switching, the application layer must ensure the active tenant is encoded into the session JWT.
+2. **Service Role Trust Boundary:** The `service_role` key bypasses RLS by design in Supabase. Backend services (e.g. Stripe webhook consumers) must sanitize tenant parameters before mutating data.
+3. **Demo Scope:** This repository is intended as an architectural reference and code demonstration, not a turnkey SaaS platform.
+
+---
+
+## 🚀 Local Development (Dashboard UI)
+
+To run the interactive UI dashboard locally:
+
+```bash
+# Using Python built-in server
+python -m http.server 3000
+
+# Or using npx
 npx serve .
 ```
 
-**Using Python:**
-```bash
-python -m http.server 3000
-```
-
-Open `http://localhost:3000` in your browser.
+Open `http://localhost:3000` in any modern web browser.
 
 ---
 
@@ -103,24 +122,24 @@ Open `http://localhost:3000` in your browser.
 ```
 pulsemetrics-saas/
 ├── data/
-│   └── mockData.js          # Centralized financial metrics & seed data layer
-├── .gitignore               # Ignored build & deployment artifacts
-├── index.html               # PulseMetrics production workspace & layout
-├── vercel.json              # Vercel routing & edge deployment configuration
-└── README.md                # Technical architecture & operational documentation
+│   └── mockData.js                       # Mock telemetry datasets for the UI
+├── supabase/
+│   ├── migrations/
+│   │   └── 20241020000001_multi_tenant_rls.sql  # Reference RLS schema migration
+│   └── tests/
+│       └── database/
+│           └── rls_policies.test.sql     # pgTAP database isolation test suite
+├── tests/
+│   └── unit/
+│       └── tenant-guard.mock.test.ts     # In-memory mock unit test
+├── index.html                            # Static dashboard user interface
+├── package.json                          # Node test scripts and dev dependencies
+├── vitest.config.ts                      # Vitest configuration
+├── vercel.json                           # Vercel deployment headers
+└── README.md                             # Architectural documentation
 ```
 
 ---
 
-## 👨‍💻 Engineering & Development
-
-Built by **Sohail Rasheed** — Full-Stack & SaaS Systems Engineer.
-
-- **Portfolio:** [sohail-rasheed.vercel.app](https://sohail-rasheed.vercel.app)
-- **LinkedIn:** [linkedin.com/in/sohail-rasheedd](https://www.linkedin.com/in/sohail-rasheedd/)
-- **GitHub:** [github.com/sohailrasheedd](https://github.com/sohailrasheedd)
-
----
-
 ## 📄 License
-This project is released under the [MIT License](LICENSE).
+Released under the [MIT License](LICENSE).

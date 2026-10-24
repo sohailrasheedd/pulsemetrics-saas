@@ -1,0 +1,48 @@
+name: Multi-Tenant RLS Database & Unit Tests
+
+on:
+  push:
+    branches:
+      - main
+      - rls-hardening
+  pull_request:
+    branches:
+      - main
+      - rls-hardening
+
+jobs:
+  database-rls-tests:
+    name: Supabase pgTAP RLS Policies Suite
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Start Supabase Stack
+        run: supabase start
+
+      - name: Run pgTAP Database Tests
+        run: supabase test db
+
+  unit-tests:
+    name: In-Memory Unit Mock Suite
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Run Vitest Unit Tests
+        run: npm test
