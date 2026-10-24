@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS public.subscriptions (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
--- CRITICAL: B-Tree index on org_id ensures RLS filter operations run in O(log N)
+-- B-Tree index on org_id ensures RLS filter operations run via index scans
 CREATE INDEX IF NOT EXISTS idx_subscriptions_org_id 
 ON public.subscriptions (org_id);
 
@@ -55,28 +55,24 @@ CREATE TABLE IF NOT EXISTS public.revenue_events (
     org_id UUID NOT NULL REFERENCES public.organizations(id) ON DELETE CASCADE,
     event_type TEXT NOT NULL, -- 'mrr.new', 'mrr.expansion', 'mrr.contraction', 'churn'
     amount_cents INTEGER NOT NULL,
-    idempotency_key TEXT NOT NULL UNIQUE,
+    idempotency_key TEXT NOT NULL,
     metadata JSONB DEFAULT '{}'::jsonb,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+    -- Compound unique constraint scoped to tenant to prevent cross-tenant key sniffing
+    CONSTRAINT uq_revenue_events_org_idempotency UNIQUE (org_id, idempotency_key)
 );
 
 CREATE INDEX IF NOT EXISTS idx_revenue_events_org_id 
 ON public.revenue_events (org_id);
 
-CREATE INDEX IF NOT EXISTS idx_revenue_events_idempotency 
-ON public.revenue_events (idempotency_key);
-
 
 -- ==============================================================================
 -- 4. High-Performance STABLE Tenant Lookup Function
 -- ==============================================================================
--- NOTE ON 'STABLE' OPTIMIZATION:
--- Postgres functions default to 'VOLATILE', which forces the query engine to
--- re-evaluate the function on EVERY SINGLE ROW evaluated during a table scan.
--- Marking this function 'STABLE' tells Postgres that within a single query/transaction,
--- the current user's org_id remains constant. PostgreSQL evaluates it once,
--- caches the result, and pushes it down into index scans (idx_subscriptions_org_id),
--- maintaining sub-35ms query latency even across millions of rows.
+-- Marking this function STABLE informs the PostgreSQL query optimizer that within
+-- a single query / transaction, the returned org_id for auth.uid() remains invariant.
+-- Wrapping function calls as (SELECT public.current_user_org_id()) in policies allows
+-- PostgreSQL to optimize it as an InitPlan, evaluating it once rather than per-row.
 -- ==============================================================================
 CREATE OR REPLACE FUNCTION public.current_user_org_id()
 RETURNS UUID
@@ -85,11 +81,11 @@ STABLE
 SECURITY DEFINER
 SET search_path = public
 AS $$
-  -- Step 1: Check signed JWT claims for pre-extracted tenant claim (Fastest: zero I/O)
+  -- Step 1: High-speed extraction directly from signed JWT app_metadata claim
   SELECT COALESCE(
-    NULLIF(current_setting('request.jwt.claim.app_metadata', true)::jsonb ->> 'org_id', '')::uuid,
+    NULLIF((auth.jwt() -> 'app_metadata' ->> 'org_id'), '')::uuid,
     (
-      -- Step 2: Fallback to cached membership table lookup for the authenticated user
+      -- Step 2: Fallback to indexed tenant memberships table for authenticated user
       SELECT org_id
       FROM public.tenant_memberships
       WHERE user_id = auth.uid()
@@ -121,60 +117,60 @@ CREATE POLICY "Tenant Isolation: Select organization"
 ON public.organizations
 FOR SELECT
 TO authenticated
-USING (id = public.current_user_org_id());
+USING (id = (SELECT public.current_user_org_id()));
 
 CREATE POLICY "Tenant Isolation: Update organization"
 ON public.organizations
 FOR UPDATE
 TO authenticated
-USING (id = public.current_user_org_id())
-WITH CHECK (id = public.current_user_org_id());
+USING (id = (SELECT public.current_user_org_id()))
+WITH CHECK (id = (SELECT public.current_user_org_id()));
 
 -- Tenant Memberships Policies
 CREATE POLICY "Tenant Isolation: Select memberships"
 ON public.tenant_memberships
 FOR SELECT
 TO authenticated
-USING (org_id = public.current_user_org_id());
+USING (org_id = (SELECT public.current_user_org_id()));
 
--- Subscriptions Table Policies
+-- Subscriptions Table Policies (Full CRUD isolation)
 CREATE POLICY "Tenant Isolation: Select subscriptions"
 ON public.subscriptions
 FOR SELECT
 TO authenticated
-USING (org_id = public.current_user_org_id());
+USING (org_id = (SELECT public.current_user_org_id()));
 
 CREATE POLICY "Tenant Isolation: Insert subscriptions"
 ON public.subscriptions
 FOR INSERT
 TO authenticated
-WITH CHECK (org_id = public.current_user_org_id());
+WITH CHECK (org_id = (SELECT public.current_user_org_id()));
 
 CREATE POLICY "Tenant Isolation: Update subscriptions"
 ON public.subscriptions
 FOR UPDATE
 TO authenticated
-USING (org_id = public.current_user_org_id())
-WITH CHECK (org_id = public.current_user_org_id());
+USING (org_id = (SELECT public.current_user_org_id()))
+WITH CHECK (org_id = (SELECT public.current_user_org_id()));
 
 CREATE POLICY "Tenant Isolation: Delete subscriptions"
 ON public.subscriptions
 FOR DELETE
 TO authenticated
-USING (org_id = public.current_user_org_id());
+USING (org_id = (SELECT public.current_user_org_id()));
 
--- Revenue Events Table Policies
+-- Revenue Events Table Policies (Append-only immutable audit ledger)
 CREATE POLICY "Tenant Isolation: Select revenue events"
 ON public.revenue_events
 FOR SELECT
 TO authenticated
-USING (org_id = public.current_user_org_id());
+USING (org_id = (SELECT public.current_user_org_id()));
 
 CREATE POLICY "Tenant Isolation: Insert revenue events"
 ON public.revenue_events
 FOR INSERT
 TO authenticated
-WITH CHECK (org_id = public.current_user_org_id());
+WITH CHECK (org_id = (SELECT public.current_user_org_id()));
 
 
 -- ==============================================================================

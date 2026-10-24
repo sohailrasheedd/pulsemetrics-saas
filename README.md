@@ -47,7 +47,9 @@ An enterprise-grade subscription telemetry and revenue intelligence workspace de
 
 ### 2. Multi-Tenant Data Isolation
 - Enforces strict tenant separation via PostgreSQL Row-Level Security (RLS) policies.
-- Every read and write transaction is bounded by `tenant_id` claims extracted directly from signed authentication JWTs (`auth.jwt() -> app_metadata`).
+- Every read and write transaction is bounded by `org_id` claims extracted directly from signed authentication JWTs (`auth.jwt() -> app_metadata`).
+- Features a high-speed `STABLE` lookup function (`current_user_org_id()`) optimized with query-plan caching (`InitPlan`).
+- Includes compound unique constraints (`org_id, idempotency_key`) to eliminate cross-tenant key enumeration risks.
 
 ---
 
