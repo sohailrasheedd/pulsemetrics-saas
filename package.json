@@ -1,0 +1,15 @@
+{
+  "name": "pulsemetrics-saas",
+  "version": "1.0.0",
+  "description": "B2B SaaS Revenue & Churn Intelligence Platform with Multi-Tenant PostgreSQL RLS",
+  "private": true,
+  "scripts": {
+    "dev": "npx serve .",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5",
+    "vitest": "^1.6.0"
+  }
+}
