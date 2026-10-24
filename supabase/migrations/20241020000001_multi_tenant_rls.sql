@@ -15,8 +15,8 @@ CREATE TABLE IF NOT EXISTS public.organizations (
 );
 
 -- 2. Organization Memberships (Maps auth.users to tenants with RBAC)
--- Note: In production Supabase environments with the auth schema present,
--- user_id references auth.users(id) ON DELETE CASCADE.
+-- Note: In Supabase environments with the auth schema present,
+-- user_id can reference auth.users(id) ON DELETE CASCADE.
 CREATE TABLE IF NOT EXISTS public.tenant_memberships (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id UUID NOT NULL REFERENCES public.organizations(id) ON DELETE CASCADE,
@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS public.subscriptions (
 CREATE INDEX IF NOT EXISTS idx_subscriptions_org_id 
 ON public.subscriptions (org_id);
 
--- Revenue & Churn Events Table (Immutable append-only ledger)
+-- Revenue & Churn Events Table (Append-only ledger)
 CREATE TABLE IF NOT EXISTS public.revenue_events (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id UUID NOT NULL REFERENCES public.organizations(id) ON DELETE CASCADE,
@@ -78,7 +78,12 @@ ON public.revenue_events (org_id);
 -- query optimizer evaluates the sub-select as an InitPlan (calculated once per execution
 -- plan rather than per evaluated row), allowing row filtering to utilize the B-tree index on org_id.
 --
--- Known Limitation:
+-- Security Assumption (JWT app_metadata):
+-- Trusting auth.jwt() -> 'app_metadata' ->> 'org_id' assumes app_metadata is strictly
+-- write-protected and only mutable server-side via Supabase Admin API / service_role.
+-- Client-side user_metadata is never used for authorization decisions.
+--
+-- Known Limitation (Earliest Membership Fallback):
 -- If a user has multiple tenant memberships and no JWT org_id claim is set, the fallback
 -- resolves deterministically to the earliest membership (ORDER BY created_at ASC LIMIT 1).
 -- Multi-organization users must have active organization selection encoded in auth.jwt().
@@ -129,14 +134,12 @@ ALTER TABLE public.revenue_events ENABLE ROW LEVEL SECURITY;
 -- ==============================================================================
 
 -- Organizations Table Policies
--- SELECT: Authenticated members can only read their own organization record.
 CREATE POLICY "Tenant Isolation: Select organization"
 ON public.organizations
 FOR SELECT
 TO authenticated
 USING (id = (SELECT public.current_user_org_id()));
 
--- UPDATE: Authenticated members can update their own organization settings.
 CREATE POLICY "Tenant Isolation: Update organization"
 ON public.organizations
 FOR UPDATE
@@ -146,7 +149,6 @@ WITH CHECK (id = (SELECT public.current_user_org_id()));
 -- Note: INSERT and DELETE on organizations are intentionally restricted to service_role / platform admin.
 
 -- Tenant Memberships Policies
--- SELECT: Authenticated users can view team members belonging to their active organization.
 CREATE POLICY "Tenant Isolation: Select memberships"
 ON public.tenant_memberships
 FOR SELECT
@@ -180,21 +182,21 @@ FOR DELETE
 TO authenticated
 USING (org_id = (SELECT public.current_user_org_id()));
 
--- Revenue Events Table Policies (Append-Only Immutable Ledger)
--- SELECT: Authenticated users can inspect revenue events for their own organization.
+-- Revenue Events Table Policies
 CREATE POLICY "Tenant Isolation: Select revenue events"
 ON public.revenue_events
 FOR SELECT
 TO authenticated
 USING (org_id = (SELECT public.current_user_org_id()));
 
--- INSERT: Authenticated users can append new revenue events for their own organization.
 CREATE POLICY "Tenant Isolation: Insert revenue events"
 ON public.revenue_events
 FOR INSERT
 TO authenticated
 WITH CHECK (org_id = (SELECT public.current_user_org_id()));
--- Note: UPDATE and DELETE policies are intentionally omitted. revenue_events is an immutable financial ledger.
+-- Note: In this reference/demo schema, authenticated client INSERTs are permitted for demonstration purposes.
+-- In production, revenue event creation is typically restricted exclusively to service_role webhook consumers.
+-- UPDATE and DELETE policies are intentionally omitted as revenue_events is an immutable ledger.
 
 
 -- ==============================================================================
