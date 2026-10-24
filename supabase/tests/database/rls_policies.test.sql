@@ -17,43 +17,32 @@ SELECT plan(16);
 -- Test Fixtures & Seed Setup (Executed as Superuser / postgres role)
 -- ==============================================================================
 
--- Setup Test RFC-4122 UUIDs
-\set org_a 'a0000000-0000-0000-0000-000000000001'
-\set org_b 'b0000000-0000-0000-0000-000000000002'
-\set user_a '10000000-0000-0000-0000-000000000001'
-\set user_b '20000000-0000-0000-0000-000000000002'
-\set user_fallback '30000000-0000-0000-0000-000000000003'
-\set user_unlinked '40000000-0000-0000-0000-000000000004'
-
-\set sub_a '11111111-1111-1111-1111-111111111111'
-\set sub_b '22222222-2222-2222-2222-222222222222'
-
 -- Safely clean only scoped test fixtures without destructive global truncate
-DELETE FROM public.revenue_events WHERE org_id IN ('a0000000-0000-0000-0000-000000000001', 'b0000000-0000-0000-0000-000000000002');
-DELETE FROM public.subscriptions WHERE org_id IN ('a0000000-0000-0000-0000-000000000001', 'b0000000-0000-0000-0000-000000000002');
-DELETE FROM public.tenant_memberships WHERE org_id IN ('a0000000-0000-0000-0000-000000000001', 'b0000000-0000-0000-0000-000000000002');
-DELETE FROM public.organizations WHERE id IN ('a0000000-0000-0000-0000-000000000001', 'b0000000-0000-0000-0000-000000000002');
+DELETE FROM public.revenue_events WHERE org_id IN ('a0000000-0000-0000-0000-000000000001'::uuid, 'b0000000-0000-0000-0000-000000000002'::uuid);
+DELETE FROM public.subscriptions WHERE org_id IN ('a0000000-0000-0000-0000-000000000001'::uuid, 'b0000000-0000-0000-0000-000000000002'::uuid);
+DELETE FROM public.tenant_memberships WHERE org_id IN ('a0000000-0000-0000-0000-000000000001'::uuid, 'b0000000-0000-0000-0000-000000000002'::uuid);
+DELETE FROM public.organizations WHERE id IN ('a0000000-0000-0000-0000-000000000001'::uuid, 'b0000000-0000-0000-0000-000000000002'::uuid);
 
 -- 1. Insert Organizations
 INSERT INTO public.organizations (id, name, slug) VALUES 
-('a0000000-0000-0000-0000-000000000001', 'Tenant Alpha', 'tenant-alpha'),
-('b0000000-0000-0000-0000-000000000002', 'Tenant Beta', 'tenant-beta');
+('a0000000-0000-0000-0000-000000000001'::uuid, 'Tenant Alpha', 'tenant-alpha'),
+('b0000000-0000-0000-0000-000000000002'::uuid, 'Tenant Beta', 'tenant-beta');
 
 -- 2. Insert Memberships
 INSERT INTO public.tenant_memberships (id, org_id, user_id, role) VALUES 
-('m0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000001', 'owner'),
-('m0000000-0000-0000-0000-000000000002', 'b0000000-0000-0000-0000-000000000002', '20000000-0000-0000-0000-000000000002', 'owner'),
-('m0000000-0000-0000-0000-000000000003', 'a0000000-0000-0000-0000-000000000001', '30000000-0000-0000-0000-000000000003', 'member');
+('c0000000-0000-0000-0000-000000000001'::uuid, 'a0000000-0000-0000-0000-000000000001'::uuid, '10000000-0000-0000-0000-000000000001'::uuid, 'owner'),
+('c0000000-0000-0000-0000-000000000002'::uuid, 'b0000000-0000-0000-0000-000000000002'::uuid, '20000000-0000-0000-0000-000000000002'::uuid, 'owner'),
+('c0000000-0000-0000-0000-000000000003'::uuid, 'a0000000-0000-0000-0000-000000000001'::uuid, '30000000-0000-0000-0000-000000000003'::uuid, 'member');
 
 -- 3. Insert Subscriptions
 INSERT INTO public.subscriptions (id, org_id, customer_email, plan_tier, mrr_cents) VALUES 
-('11111111-1111-1111-1111-111111111111', 'a0000000-0000-0000-0000-000000000001', 'customer@alpha.com', 'enterprise', 50000),
-('22222222-2222-2222-2222-222222222222', 'b0000000-0000-0000-0000-000000000002', 'customer@beta.com', 'starter', 9900);
+('11111111-1111-1111-1111-111111111111'::uuid, 'a0000000-0000-0000-0000-000000000001'::uuid, 'customer@alpha.com', 'enterprise', 50000),
+('22222222-2222-2222-2222-222222222222'::uuid, 'b0000000-0000-0000-0000-000000000002'::uuid, 'customer@beta.com', 'starter', 9900);
 
 -- 4. Insert Revenue Events
 INSERT INTO public.revenue_events (org_id, event_type, amount_cents, idempotency_key) VALUES 
-('a0000000-0000-0000-0000-000000000001', 'mrr.new', 50000, 'evt_shared_key_001'),
-('b0000000-0000-0000-0000-000000000002', 'mrr.new', 9900, 'evt_shared_key_001');
+('a0000000-0000-0000-0000-000000000001'::uuid, 'mrr.new', 50000, 'evt_shared_key_001'),
+('b0000000-0000-0000-0000-000000000002'::uuid, 'mrr.new', 9900, 'evt_shared_key_001');
 
 
 -- ==============================================================================
@@ -90,7 +79,7 @@ SELECT results_eq(
 -- TEST 2: Tenant A selecting Tenant B row by exact ID returns 0 rows (1 assertion)
 -- ==============================================================================
 SELECT is_empty(
-  'SELECT * FROM public.subscriptions WHERE id = ''22222222-2222-2222-2222-222222222222''',
+  'SELECT * FROM public.subscriptions WHERE id = ''22222222-2222-2222-2222-222222222222''::uuid',
   'Tenant A selecting Tenant B subscription by ID returns 0 rows'
 );
 
@@ -98,14 +87,14 @@ SELECT is_empty(
 -- TEST 3: Tenant A inserting with Tenant B org_id throws 42501 (2 assertions)
 -- ==============================================================================
 SELECT throws_ok(
-  'INSERT INTO public.subscriptions (org_id, customer_email, plan_tier, mrr_cents) VALUES (''b0000000-0000-0000-0000-000000000002'', ''spoof@test.com'', ''scale'', 1000)',
+  'INSERT INTO public.subscriptions (org_id, customer_email, plan_tier, mrr_cents) VALUES (''b0000000-0000-0000-0000-000000000002''::uuid, ''spoof@test.com'', ''scale'', 1000)',
   '42501',
   NULL,
   'Tenant A insert into Tenant B subscriptions fails with 42501 RLS check violation'
 );
 
 SELECT throws_ok(
-  'INSERT INTO public.revenue_events (org_id, event_type, amount_cents, idempotency_key) VALUES (''b0000000-0000-0000-0000-000000000002'', ''mrr.expansion'', 1000, ''evt_spoof_01'')',
+  'INSERT INTO public.revenue_events (org_id, event_type, amount_cents, idempotency_key) VALUES (''b0000000-0000-0000-0000-000000000002''::uuid, ''mrr.expansion'', 1000, ''evt_spoof_01'')',
   '42501',
   NULL,
   'Tenant A insert into Tenant B revenue_events fails with 42501 RLS check violation'
@@ -114,13 +103,13 @@ SELECT throws_ok(
 -- ==============================================================================
 -- TEST 4: Tenant A UPDATE and DELETE on Tenant B rows affect 0 rows (1 assertion)
 -- ==============================================================================
-UPDATE public.subscriptions SET customer_email = 'hacked@beta.com' WHERE id = '22222222-2222-2222-2222-222222222222';
-DELETE FROM public.subscriptions WHERE id = '22222222-2222-2222-2222-222222222222';
+UPDATE public.subscriptions SET customer_email = 'hacked@beta.com' WHERE id = '22222222-2222-2222-2222-222222222222'::uuid;
+DELETE FROM public.subscriptions WHERE id = '22222222-2222-2222-2222-222222222222'::uuid;
 
 RESET ROLE;
 -- Superuser verification that Tenant B record was not mutated or deleted
 SELECT results_eq(
-  'SELECT customer_email FROM public.subscriptions WHERE id = ''22222222-2222-2222-2222-222222222222''',
+  'SELECT customer_email FROM public.subscriptions WHERE id = ''22222222-2222-2222-2222-222222222222''::uuid',
   'VALUES (''customer@beta.com''::text)',
   'Tenant B row remains untouched after Tenant A attempted update/delete'
 );
@@ -132,7 +121,7 @@ SET LOCAL ROLE authenticated;
 SET LOCAL "request.jwt.claims" = '{"sub": "10000000-0000-0000-0000-000000000001", "role": "authenticated", "app_metadata": {"org_id": "a0000000-0000-0000-0000-000000000001"}}';
 
 SELECT throws_ok(
-  'UPDATE public.subscriptions SET org_id = ''b0000000-0000-0000-0000-000000000002'' WHERE id = ''11111111-1111-1111-1111-111111111111''',
+  'UPDATE public.subscriptions SET org_id = ''b0000000-0000-0000-0000-000000000002''::uuid WHERE id = ''11111111-1111-1111-1111-111111111111''::uuid',
   '42501',
   NULL,
   'Tenant A cannot migrate own subscription to Tenant B via UPDATE (WITH CHECK failure)'
@@ -180,7 +169,7 @@ SELECT is_empty(
 RESET ROLE;
 -- Duplicate insert in same org fails with 23505 unique violation
 SELECT throws_ok(
-  'INSERT INTO public.revenue_events (org_id, event_type, amount_cents, idempotency_key) VALUES (''a0000000-0000-0000-0000-000000000001'', ''mrr.expansion'', 500, ''evt_shared_key_001'')',
+  'INSERT INTO public.revenue_events (org_id, event_type, amount_cents, idempotency_key) VALUES (''a0000000-0000-0000-0000-000000000001''::uuid, ''mrr.expansion'', 500, ''evt_shared_key_001'')',
   '23505',
   NULL,
   'Duplicate idempotency_key within the same org fails with 23505 unique constraint violation'
@@ -191,7 +180,7 @@ SELECT throws_ok(
 -- ==============================================================================
 SET LOCAL ROLE service_role;
 SELECT lives_ok(
-  'INSERT INTO public.subscriptions (org_id, customer_email, plan_tier, mrr_cents) VALUES (''b0000000-0000-0000-0000-000000000002'', ''webhook@service.com'', ''scale'', 25000)',
+  'INSERT INTO public.subscriptions (org_id, customer_email, plan_tier, mrr_cents) VALUES (''b0000000-0000-0000-0000-000000000002''::uuid, ''webhook@service.com'', ''scale'', 25000)',
   'Service role with BYPASSRLS can insert across tenants for background webhook ingestion'
 );
 
@@ -206,7 +195,7 @@ SELECT throws_ok(
   'Anon cannot execute current_user_org_id() (permission denied)'
 );
 
--- Reset role back to postgres/superuser before finish
+-- Reset role back to superuser before finish
 RESET ROLE;
 
 SELECT * FROM finish();
