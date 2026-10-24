@@ -85,8 +85,15 @@
       border: 1px solid rgba(255, 255, 255, 0.08);
     }
     body.theme-dark .fintech-sidebar {
-      background: rgba(11, 17, 36, 0.95);
+      background: #080d1e;
       border-right: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    html, body {
+      overflow-x: hidden;
+      max-width: 100vw;
+    }
+    [id] {
+      scroll-margin-top: 5.5rem;
     }
 
     /* Light Luxe Theme */
@@ -267,27 +274,27 @@
       <!-- Navigation Menu -->
       <nav class="space-y-1 font-mono text-xs">
         <div class="text-[10px] uppercase text-slate-500 tracking-wider font-bold px-3 py-1 mb-1">Analytics Views</div>
-        <a href="#overview" onclick="highlightNav(this)" class="nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 font-bold transition">
+        <a href="#overview" onclick="highlightNav(this, event)" class="nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 font-bold transition">
           <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
           <span>Executive Overview</span>
         </a>
-        <a href="#chart-section" onclick="highlightNav(this)" class="nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-300 hover:bg-white/5 hover:text-white transition">
+        <a href="#chart-section" onclick="highlightNav(this, event)" class="nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-300 hover:bg-white/5 hover:text-white transition">
           <i data-lucide="trending-up" class="w-4 h-4 text-slate-400"></i>
           <span>Revenue Trajectory</span>
         </a>
-        <a href="#aiCopilotSection" onclick="highlightNav(this)" class="nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-300 hover:bg-white/5 hover:text-white transition">
+        <a href="#aiCopilotSection" onclick="highlightNav(this, event)" class="nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-300 hover:bg-white/5 hover:text-white transition">
           <i data-lucide="sparkles" class="w-4 h-4 text-cyan-400"></i>
           <span>AI Revenue Copilot</span>
         </a>
-        <a href="#webhook-section" onclick="highlightNav(this)" class="nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-300 hover:bg-white/5 hover:text-white transition">
+        <a href="#webhook-section" onclick="highlightNav(this, event)" class="nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-300 hover:bg-white/5 hover:text-white transition">
           <i data-lucide="zap" class="w-4 h-4 text-slate-400"></i>
           <span>Live Webhook Feed</span>
         </a>
-        <a href="#cohort-section" onclick="highlightNav(this)" class="nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-300 hover:bg-white/5 hover:text-white transition">
+        <a href="#cohort-section" onclick="highlightNav(this, event)" class="nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-300 hover:bg-white/5 hover:text-white transition">
           <i data-lucide="layers" class="w-4 h-4 text-slate-400"></i>
           <span>Cohort Retention</span>
         </a>
-        <a href="#subscribers-section" onclick="highlightNav(this)" class="nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-300 hover:bg-white/5 hover:text-white transition">
+        <a href="#subscribers-section" onclick="highlightNav(this, event)" class="nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-300 hover:bg-white/5 hover:text-white transition">
           <i data-lucide="users" class="w-4 h-4 text-slate-400"></i>
           <span>Subscribers & Churn</span>
         </a>
@@ -334,7 +341,7 @@
   </aside>
 
   <!-- MAIN APPLICATION AREA -->
-  <main class="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full space-y-6 pt-10">
+  <main class="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full space-y-6 pt-12 overflow-x-hidden">
     
     <!-- TOP APP BAR -->
     <div id="overview" class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/10">
@@ -1887,16 +1894,40 @@
       }
     }
 
-    function highlightNav(el) {
+    function highlightNav(el, e) {
+      if (e) e.preventDefault();
       document.querySelectorAll('.nav-item').forEach(i => {
         i.className = 'nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-300 hover:bg-white/5 hover:text-white transition';
       });
       el.className = 'nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 font-bold transition';
+
+      const href = el.getAttribute('href');
+      if (href && href.startsWith('#')) {
+        const target = document.querySelector(href);
+        if (target) {
+          const banner = document.getElementById('demoNoticeBanner');
+          const bannerOffset = banner ? banner.offsetHeight + 24 : 56;
+          const targetY = target.getBoundingClientRect().top + window.pageYOffset - bannerOffset;
+          window.scrollTo({
+            top: Math.max(0, targetY),
+            left: 0,
+            behavior: 'smooth'
+          });
+          if (window.history && window.history.pushState) {
+            window.history.pushState(null, '', href);
+          }
+        }
+      }
+
       if (window.innerWidth < 768) {
         document.getElementById('sidebar').classList.add('hidden');
         document.getElementById('sidebarBackdrop')?.classList.add('hidden');
       }
     }
+
+    window.addEventListener('load', () => {
+      window.scrollTo(0, 0);
+    });
 
     // Init
     document.addEventListener('DOMContentLoaded', () => {
